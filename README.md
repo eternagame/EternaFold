@@ -2,7 +2,7 @@
 
 EternaFold extends the conditional likelihood model in CONTRAfold and CONTRAfold-SE to also train on experimentally-measured affinities of RNA molecules to proteins and small molecules.
 
-Made possible by [CONTRAfold-SE.](https://github.com/csfoo/contrafold-se)
+Made possible by [CONTRAfold-SE](https://github.com/csfoo/contrafold-se) (C.-S. Foo, C. Pop).
 
 ### Installation
 
