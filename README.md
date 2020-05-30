@@ -1,8 +1,10 @@
 ## EternaFold - Improving RNA structure prediction through multitask learning
 
-EternaFold extends the conditional likelihood model in CONTRAfold and CONTRAfold-SE to also train on experimentally-measured affinities of RNA molecules to proteins and small molecules.
+EternaFold performs multitask learning to improve RNA structure prediction. Its training tasks include 1) predicting single structures, 2) maximizing the likelihood of structure probing data, and 3) predicting experimentally-measured affinities of RNA molecules to proteins and small molecules.
 
-Made possible thanks to [CONTRAfold-SE](https://github.com/csfoo/contrafold-se) (C.-S. Foo, C. Pop).
+Its training data comes from diverse high-throughput experimental crowdsourced data from the [Eterna](www.eternagame.org) project.
+
+EternaFold is possible thanks to [CONTRAfold-SE](https://github.com/csfoo/contrafold-se) (C.-S. Foo, C. Pop).
 
 ### Installation
 
