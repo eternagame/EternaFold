@@ -2,14 +2,14 @@
 
 EternaFold extends the conditional likelihood model in CONTRAfold and CONTRAfold-SE to also train on experimentally-measured affinities of RNA molecules to proteins and small molecules.
 
-Based on CONTRAfold-SE, found [here.](https://github.com/csfoo/contrafold-se)
+Made possible by [CONTRAfold-SE.](https://github.com/csfoo/contrafold-se)
 
 ### Installation
 
 Clone the repository and run `make` in `src` to compile.
 Multithreaded version: run `make multi` in `src`.
 
-("CONTRAfold-SE has been tested on g++ 4.4.7 and 4.8.4.")
+(CONTRAfold-SE has been tested on g++ 4.4.7 and 4.8.4.)
 
 ### Prediction
 
