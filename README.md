@@ -1,4 +1,4 @@
-## EternaFold - Improving ensemble-based structure predictions using high-throughput structural ensemble data
+## EternaFold - Improving RNA structure prediction through multitask learning
 
 EternaFold extends the conditional likelihood model in CONTRAfold and CONTRAfold-SE to also train on experimentally-measured affinities of RNA molecules to proteins and small molecules.
 
