@@ -1,0 +1,1 @@
+To generate datalists of holdout/train/test files used for Eternafold, run `./write_all_datalists.sh` in this repo. These datalists must be re-generated for each new build for Eternafold to get the correct global paths.

@@ -1,0 +1,8 @@
+*/*.o
+src/contrafold
+src/api_test
+src/optimize.*
+input_data/*
+old_input_data/*
+datalists/*.txt
+local_analysis/*
