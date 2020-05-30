@@ -16,9 +16,9 @@ Multithreaded version: run `make multi` in `src`.
 ### Prediction
 
 #### Single-structure prediction
-Predict the MEA structure of sequence "test":
+Predict the MEA structure of sequence "test", using the EternaFold parameters:
 
-`contrafold predict test.bpseq`
+`contrafold predict test.bpseq --params parameters/EternaFoldParams.v1`
 
 Please see the documentation of [CONTRAfold](http://contra.stanford.edu/contrafold/manual_v2_02.pdf) for further information on parameters and usage.
 
