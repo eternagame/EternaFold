@@ -33,8 +33,7 @@ Text files containing the lists used for training, test, and holdout models for 
 
 From CONTRAfold-SE:
 
-```
-Learn parameters based on a set of sequences, in which sequences with associated probing data have data from 2 sources, and with a relative weight (specified by `hyperparam_data`) of 0.1.
+"Learn parameters based on a set of sequences, in which sequences with associated probing data have data from 2 sources, and with a relative weight (specified by `hyperparam_data`) of 0.1.
 
 Assumes that folder "trainset" has a set of sequences of type ".bpseq" in evidence format for the ones with data.
 
@@ -42,8 +41,7 @@ Assumes that folder "trainset" has a set of sequences of type ".bpseq" in eviden
 
 If there are a large number of input files used (> 1000 files; e.g. for training on RMDB data), provide a text file containing the list of example files instead with the `--examplefile` option.
 
-`contrafold train --regularize 1 --numdatasources 1 --maxiter 500 --examplefile examples.txt`
-```
+`contrafold train --regularize 1 --numdatasources 1 --maxiter 500 --examplefile examples.txt`"
 
 #### Training options for riboswitch data
 
