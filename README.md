@@ -1,15 +1,17 @@
-## EternaFold - Improving ensemble-based structure predictions using high-throughput structural ensemble data
+## EternaFold - Improving RNA structure prediction through multitask learning
 
-EternaFold extends the conditional likelihood model in CONTRAfold and CONTRAfold-SE to also train on experimentally-measured affinities of RNA molecules to proteins and small molecules.
+EternaFold performs multitask learning to improve RNA structure prediction. Its training tasks include 1) predicting single structures, 2) maximizing the likelihood of structure probing data, and 3) predicting experimentally-measured affinities of RNA molecules to proteins and small molecules.
 
-Based on CONTRAfold-SE, found [here.](https://github.com/csfoo/contrafold-se)
+Its training data comes from diverse high-throughput experimental crowdsourced data from the [Eterna](www.eternagame.org) project.
+
+EternaFold is possible thanks to [CONTRAfold-SE](https://github.com/csfoo/contrafold-se) (C.-S. Foo, C. Pop).
 
 ### Installation
 
 Clone the repository and run `make` in `src` to compile.
 Multithreaded version: run `make multi` in `src`.
 
-("CONTRAfold-SE has been tested on g++ 4.4.7 and 4.8.4.")
+(CONTRAfold-SE has been tested on g++ 4.4.7 and 4.8.4.)
 
 ### Prediction
 
@@ -33,8 +35,7 @@ Text files containing the lists used for training, test, and holdout models for 
 
 From CONTRAfold-SE:
 
-```
-Learn parameters based on a set of sequences, in which sequences with associated probing data have data from 2 sources, and with a relative weight (specified by `hyperparam_data`) of 0.1.
+"Learn parameters based on a set of sequences, in which sequences with associated probing data have data from 2 sources, and with a relative weight (specified by `hyperparam_data`) of 0.1.
 
 Assumes that folder "trainset" has a set of sequences of type ".bpseq" in evidence format for the ones with data.
 
@@ -42,8 +43,7 @@ Assumes that folder "trainset" has a set of sequences of type ".bpseq" in eviden
 
 If there are a large number of input files used (> 1000 files; e.g. for training on RMDB data), provide a text file containing the list of example files instead with the `--examplefile` option.
 
-`contrafold train --regularize 1 --numdatasources 1 --maxiter 500 --examplefile examples.txt`
-```
+`contrafold train --regularize 1 --numdatasources 1 --maxiter 500 --examplefile examples.txt`"
 
 #### Training options for riboswitch data
 
