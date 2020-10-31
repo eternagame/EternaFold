@@ -210,7 +210,7 @@ const double MM_SMOOTHING = 1.0;
 // (F) Miscellaneous model constants
 //////////////////////////////////////////////////////////////////////
 
-const int C_MIN_HAIRPIN_LENGTH = 0;
+const int C_MIN_HAIRPIN_LENGTH = 3;
 const int C_MAX_SINGLE_LENGTH = 30;
 
 const int D_MAX_HAIRPIN_LENGTH = 30;
