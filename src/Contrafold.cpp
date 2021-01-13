@@ -959,7 +959,7 @@ void RunPredictionFoldChangeMode(const Options &options,
    MakeDirectory(SPrintF("%s%c%s.gamma=%lf",
                          output_bpseq_destination.c_str(),
                          DIR_SEPARATOR_CHAR,
-                         GetBaseName(output_bpseq_destination).c_str(), gamma));
+                         GetBaseName(output_bpseq_destination).c_str(), options.GetRealValue("gamma")));
 
     // load parameters
     std::vector<RealT> w;
