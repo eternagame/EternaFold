@@ -21,7 +21,7 @@
 template<class RealT>
 class InferenceEngine
 {
-    static const double DATA_LOW_THRESH = 1e-7;  // used for the data so that log is not -Inf
+    static constexpr double DATA_LOW_THRESH = 1e-7;  // used for the data so that log is not -Inf
 
     const bool allow_noncomplementary;
     unsigned char char_mapping[256];

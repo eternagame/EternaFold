@@ -133,7 +133,7 @@ void InnerOptimizationWrapperStochasticGradient<RealT>::Report(const std::string
 template<class RealT>
 RealT InnerOptimizationWrapperStochasticGradient<RealT>::Minimize(std::vector<RealT> &x0)
 {
-    RealT result = 0;
+    // RealT result = 0;
     std::vector<RealT> g;
     int next_report_iter = 1;
 
