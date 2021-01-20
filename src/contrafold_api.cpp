@@ -67,7 +67,7 @@ float pfunc(char* seq, char* c)
 	std::cout << "constraints: " << constr << std::endl;
 
     ParameterManager<float> parameter_manager;
-    InferenceEngine<float> inference_engine(options.GetBoolValue("allow_noncomplementary"),0);
+    InferenceEngine<float> inference_engine(options.GetBoolValue("allow_noncomplementary"),0, options.GetRealValue("kappa"));
     inference_engine.RegisterParameters(parameter_manager);
 
     SStruct sstruct;
@@ -109,7 +109,7 @@ char* predict_struct(char* seq, char* c)
 	std::cout << "constraints: " << constr << std::endl;
 
     ParameterManager<float> parameter_manager;
-    InferenceEngine<float> inference_engine(options.GetBoolValue("allow_noncomplementary"),0);
+    InferenceEngine<float> inference_engine(options.GetBoolValue("allow_noncomplementary"),0, options.GetRealValue("kappa"));
     inference_engine.RegisterParameters(parameter_manager);
 
     SStruct sstruct;

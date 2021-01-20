@@ -996,6 +996,22 @@ void SStruct::WriteBPSEQ(std::ostream &outfile, const int seq) const
 }
 
 //////////////////////////////////////////////////////////////////////
+// SStruct::WriteBPPSEQ() HKWS what is this?
+//
+// Write sequence in BPPSEQ format.  The BPSEQ format can only handle
+// single sequences, so it will only print out the sequence "seq".
+//////////////////////////////////////////////////////////////////////
+
+void SStruct::WriteBPPSEQ(std::ostream &outfile, std::vector<std::vector<double> > potential, const int seq)
+{
+    if (seq < 0 || seq >= int(sequences.size())) Error("Reference to invalid sequence.");
+    Assert(sequences[seq].length() == mapping.size(), "Inconsistent lengths.");
+    
+    for (size_t i = 1; i < mapping.size(); i++)
+        outfile << i << ' ' << sequences[seq][i] << " e1 " << potential[seq][i-1] << std::endl;
+}
+
+//////////////////////////////////////////////////////////////////////
 // SStruct::WriteParens()
 //
 // Write sequence in parenthesized format.  This routine assumes that
@@ -1016,6 +1032,30 @@ void SStruct::WriteParens(std::ostream &outfile) const
 
     // print structure
     outfile << ">structure" << std::endl;
+    outfile << ConvertMappingToParens(mapping).substr(1) << std::endl;
+}
+
+//////////////////////////////////////////////////////////////////////
+// SStruct::WriteParensOnly()
+//
+// Write sequence in parenthesized format.  This routine assumes that
+// the structure does not contain pseudoknots.  All sequences are
+// printed.
+//////////////////////////////////////////////////////////////////////
+
+void SStruct::WriteParensOnly(std::ostream &outfile) const
+{
+    if (ContainsPseudoknots()) Error("Cannot write structure containing pseudoknots using parenthesized format.");
+    
+    // print sequences
+    // for (size_t k = 0; k < sequences.size(); k++)
+    // {
+    //     outfile << ">" << names[k] << std::endl;
+    //     outfile << sequences[k].substr(1) << std::endl;
+    // }
+
+    // print structure
+    //outfile << ">structure" << std::endl;
     outfile << ConvertMappingToParens(mapping).substr(1) << std::endl;
 }
 

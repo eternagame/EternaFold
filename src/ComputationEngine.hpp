@@ -18,6 +18,7 @@
 #include "DistributedComputation.hpp"
 #include "FileDescription.hpp"
 #include <vector>
+#include <cstdlib>
 
 //////////////////////////////////////////////////////////////////////
 // struct SharedInfo
@@ -37,6 +38,7 @@ struct SharedInfo
     bool use_nonsmooth;
     bool use_loss;
     RealT gamma;
+    RealT sigma;
     RealT log_base;
 //    std::vector<int> evidence_cpd_id;
     RealT evidence_data_scale;
@@ -79,7 +81,10 @@ enum ProcessingType
     CHECK_ZEROS_IN_DATA,
     COMPUTE_HV,
     PREDICT,
-    PREDICT_FOLDCHANGE
+    PREDICT_FOLDCHANGE,
+    SAMPLE,
+    TEST_ENERGIES,
+    REVI,
 };
 
 struct NonSharedInfo
@@ -129,6 +134,9 @@ public:
     void ComputeHessianVectorProduct(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared);
     void Predict(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared);
     void PredictFoldChange(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared);
+    void Sample(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared);
+    void RunREVI(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared);
+    void TestEnergies(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared);
     void CheckZerosInData(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared);
     void ComputeGammaMLEScalingFactor(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared);
     void ComputeFunctionAndGradientSE(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared, bool need_gradient);

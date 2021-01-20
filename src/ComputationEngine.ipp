@@ -91,6 +91,16 @@ void ComputationEngine<RealT>::DoComputation(std::vector<RealT> &result,
             break;
         case PREDICT_FOLDCHANGE:
             PredictFoldChange(result, shared, nonshared);
+            break;
+        case SAMPLE:
+            Sample(result, shared, nonshared);
+            break;
+        case REVI:
+            RunREVI(result, shared, nonshared);
+            break;
+        case TEST_ENERGIES:
+            TestEnergies(result,shared,nonshared);
+            break;
         default: 
             Assert(false, "Unknown command type.");
             break;
@@ -1211,7 +1221,7 @@ void ComputationEngine<RealT>::ComputeFunctionAndGradientSE(std::vector<RealT> &
                 }
 
                 int index_k = parameter_manager.GetLogicalIndex(
-                    inference_engine.GetLogScoreEvidence(0, i, j, dataset_id));
+                    inference_engine.GetLogScoreEvidence(0, i, j, dataset_id)); // i: seq, j: pr or unpaired, ds=0
                 int index_theta = parameter_manager.GetLogicalIndex(
                     inference_engine.GetLogScoreEvidence(1, i, j, dataset_id));
 
@@ -1405,6 +1415,268 @@ void ComputationEngine<RealT>::ComputeHessianVectorProduct(std::vector<RealT> &r
 }
 
 //////////////////////////////////////////////////////////////////////
+// ComputationEngine::TestEnergies()
+//
+// Print energies for a single sequence.
+//////////////////////////////////////////////////////////////////////
+
+template<class RealT>
+void ComputationEngine<RealT>::TestEnergies(std::vector<RealT> &result, 
+                                       const SharedInfo<RealT> &shared,
+                                       const NonSharedInfo &nonshared)
+{
+    result.clear();
+
+    // load sequence, with constraints if necessary
+    const SStruct &sstruct = descriptions[nonshared.index].sstruct;
+    inference_engine.LoadSequence(sstruct);
+    if (options.GetBoolValue("use_constraints")) inference_engine.UseConstraints(sstruct.GetMapping());
+
+    // load parameters
+    const std::vector<RealT> w(shared.w, shared.w + parameter_manager.GetNumLogicalParameters());
+    inference_engine.LoadValues(w * shared.log_base);
+
+    inference_engine.UpdateEvidenceStructures();
+
+    // perform inference
+    SStruct *solution;
+
+    inference_engine.ComputeViterbi();
+
+    if (options.GetBoolValue("use_evidence")){
+        inference_engine.GetViterbiFeaturesESS();
+    }
+    else{
+            inference_engine.GetViterbiFeatures();
+    }
+
+    std::cout << "Viterbi score for \"" << descriptions[nonshared.index].input_filename << "\": " 
+            << inference_engine.GetViterbiScore() << std::endl;
+
+    solution = new SStruct(sstruct);
+    solution->SetMapping(inference_engine.PredictPairingsViterbi());
+
+    WriteProgressMessage("");
+    solution->WriteParens(std::cout);
+
+    delete solution;
+}
+
+//////////////////////////////////////////////////////////////////////
+// ComputationEngine::REVI()
+//
+//////////////////////////////////////////////////////////////////////
+
+template<class RealT>
+void ComputationEngine<RealT>::RunREVI(std::vector<RealT> &result, 
+                                       const SharedInfo<RealT> &shared,
+                                       const NonSharedInfo &nonshared)
+{
+    result.clear();
+
+
+    // perform inference (repurposing chem mapping potentials as pairwise potentials)
+
+    const SStruct &sstruct = descriptions[nonshared.index].sstruct;
+    inference_engine.LoadSequence(sstruct);
+    inference_engine.InitializeREVIVec();
+
+    if (options.GetBoolValue("use_constraints")) inference_engine.UseConstraints(sstruct.GetMapping());
+    // load parameters
+
+    const std::vector<RealT> w(shared.w, shared.w + parameter_manager.GetNumLogicalParameters());
+    inference_engine.LoadValues(w * shared.log_base);
+
+    int L = sstruct.GetLength();
+    int n_samples = 1000;
+    int n_iters = 100;
+    double last_loss_0 = 100000000;
+    double last_loss_1 = 100000000;
+    double last_loss_2 = 100000000;
+    double step_size = 0.1;
+
+    RealT sigma = shared.sigma;
+
+    for (int k=1; k<=n_iters; k++){
+
+    const std::vector<RealT> w(shared.w, shared.w + parameter_manager.GetNumLogicalParameters());
+    inference_engine.LoadValues(w * shared.log_base);
+
+    inference_engine.ComputeInsideESS();
+
+    std::vector<RealT> unp_i(L,0.0);
+    std::vector<RealT> pr_i(L,0.0);
+
+    std::vector<std::vector<RealT> > p_j_unp_given_i_unp;
+    std::vector<std::vector<RealT> > p_j_paired_given_i_paired;
+
+    for (int i=0; i< L; i++)
+    {    
+        std::vector<RealT> vec(L,0.0);
+        p_j_unp_given_i_unp.push_back(vec);
+        p_j_paired_given_i_paired.push_back(vec);
+    }
+
+    for (int sample_ind = 0; sample_ind < n_samples; sample_ind++)
+    { 
+
+    int seed = rand();
+    inference_engine.InitRand(seed);
+    std::vector<int> map = inference_engine.PredictPairingsStochasticTracebackESS();
+
+    // count occurences from samples
+    for (int i=0; i< L; i++)
+        {
+            if (map[i+1] == 0){
+                unp_i[i] += 1;
+
+                for (int j=0; j<L; j++){
+                    if (map[j+1] == 0)
+                    {
+                        p_j_unp_given_i_unp[i][j] += 1;
+                    }
+                }
+        }
+        else{ // base is paired
+            pr_i[i] += 1;
+             for (int j=0; j<L; j++){
+                        if (map[j+1] != 0)
+                        {
+                            p_j_paired_given_i_paired[i][j] += 1;
+                        }
+                    }   
+        }
+    }
+
+}
+    // normalize probability counts for p_unpaired vector
+
+    for (int i=0; i< L; i++)
+        {
+            if (unp_i[i] > 0){
+
+                for (int j=0; j<L; j++){
+                    p_j_unp_given_i_unp[i][j] /= unp_i[i]; 
+                }
+            }
+            unp_i[i] /= n_samples;
+    }
+
+    // normalize probability counts for p_paired vector
+    for (int i=0; i< L; i++)
+        {
+            if (pr_i[i] > 0){
+
+                for (int j=0; j<L; j++){
+                    p_j_paired_given_i_paired[i][j] /= pr_i[i]; 
+                }
+            }
+            pr_i[i] /= n_samples;
+    }
+
+    std::vector<RealT> error = inference_engine.GetREVIError(unp_i);
+    std::vector<std::vector< double> > currREVIvec_up = inference_engine.GetREVIvec_up();
+    std::vector<std::vector< double> > currREVIvec_pr = inference_engine.GetREVIvec_pr();
+
+    std::vector<RealT> update_unp(L,0.0);
+    std::vector<RealT> update_pr(L,0.0);
+
+    // get p_i, p_i_given_j
+    // write gradient
+
+    double curr_loss = 0.0;
+
+    // get gradient for unpaired potentials
+    for (int j=0; j< L; j++){
+
+     for (int i=0; i< L; i++)
+        {    
+        update_unp[j] += sigma*step_size*error[i]*unp_i[i]*(unp_i[j] - p_j_unp_given_i_unp[i][j]);
+        update_pr[j] += sigma*step_size*error[i]*pr_i[i]*(pr_i[j] - p_j_paired_given_i_paired[i][j]);
+
+            }
+        update_unp[j] += -2*step_size*currREVIvec_up[0][j];
+        update_pr[j] += -2*step_size*currREVIvec_pr[0][j]; //UPDATE to be curr REVI vec for paired
+
+        }
+
+    for (int i=0; i< L; i++)
+        {   
+        curr_loss += pow(currREVIvec_up[0][i],2) + sigma*pow(error[i],2) + pow(currREVIvec_pr[0][i],2); // UPDATE to be curr REVI vec for paired
+        }     
+
+
+    if ((abs(last_loss_2 - curr_loss) < 0.1) || k==n_iters){
+        // We're done, sample and print structures one more time
+
+    SStruct *solution;
+
+    if (options.GetStringValue("output_bpseq_destination") != "")
+    {
+        solution = new SStruct(sstruct);
+        //solution->SetMapping(inference_engine.PredictPairingsViterbi());
+
+        const std::string filename = MakeOutputFilename(descriptions[nonshared.index].input_filename,
+                                                        options.GetStringValue("output_bpseq_destination"),
+                                                        options.GetRealValue("gamma") < 0,
+                                                        shared.gamma);
+        std::ofstream outfile(filename.c_str());
+        if (outfile.fail()) Error("Unable to open output bpseq file '%s' for writing.", filename.c_str());
+        solution->WriteBPPSEQ(outfile, inference_engine.GetREVIvec_up());
+        outfile.close();
+        delete solution;
+    }
+
+    if (options.GetStringValue("output_posteriors_destination") != "")
+    {
+        const std::string filename = MakeOutputFilename(descriptions[nonshared.index].input_filename,
+                                                        options.GetStringValue("output_posteriors_destination"),
+                                                        options.GetRealValue("gamma") < 0,
+                                                        shared.gamma);
+
+        inference_engine.ComputeOutsideESS();
+        inference_engine.ComputePosteriorESS();
+
+        RealT *posterior = inference_engine.GetPosterior(options.GetRealValue("output_posteriors_cutoff"));
+        SparseMatrix<RealT> sparse(posterior, sstruct.GetLength()+1, RealT(0));
+        delete [] posterior;
+        std::ofstream outfile(filename.c_str());
+        if (outfile.fail()) Error("Unable to open output posteriors file '%s' for writing.", filename.c_str());
+        sparse.PrintSparseBPSEQ(outfile, sstruct.GetSequences()[0]);
+        outfile.close();
+    }
+
+        for (int sample_ind = 0; sample_ind < 100; sample_ind++)
+            { 
+            solution = new SStruct(sstruct);
+            int seed = rand();
+            inference_engine.InitRand(seed);
+
+            solution->SetMapping(inference_engine.PredictPairingsStochasticTracebackESS());
+            solution->WriteParensOnly(std::cout);
+            delete solution;
+            }
+
+        break;
+    } else {
+        // continue
+        std::cerr << k << " " << curr_loss << std::endl;
+        std::cerr << "p_i " << unp_i << std::endl; 
+        std::cerr << "err " << error << std::endl;
+        last_loss_2 = last_loss_1;
+        last_loss_1 = last_loss_0;
+        last_loss_0 = curr_loss;
+
+        step_size /= 2;
+
+        inference_engine.UpdateREVIVec(update_unp, update_pr);
+    
+    }
+
+
+}
+}
+//////////////////////////////////////////////////////////////////////
 // ComputationEngine::Predict()
 //
 // Predict structure of a single sequence.
@@ -1437,6 +1709,8 @@ void ComputationEngine<RealT>::Predict(std::vector<RealT> &result,
         // Basically, add a ComputeViterbiESS and then call it to support this.
 
         inference_engine.ComputeViterbi();
+        inference_engine.ComputeViterbiFeatureCounts(); // HKWS why is this here?
+
         if (options.GetBoolValue("partition_function_only"))
         {
             std::cout << "Viterbi score for \"" << descriptions[nonshared.index].input_filename << "\": " 
@@ -1537,6 +1811,69 @@ void ComputationEngine<RealT>::Predict(std::vector<RealT> &result,
     
     delete solution;
 }
+
+//////////////////////////////////////////////////////////////////////
+// ComputationEngine::Sample()
+//
+// Sample structures from predicted ensemble.
+//////////////////////////////////////////////////////////////////////
+
+template<class RealT>
+void ComputationEngine<RealT>::Sample(std::vector<RealT> &result, 
+                                       const SharedInfo<RealT> &shared,
+                                       const NonSharedInfo &nonshared)
+{
+    result.clear();
+    
+    // load sequence, with constraints if necessary
+    const SStruct &sstruct = descriptions[nonshared.index].sstruct;
+    inference_engine.LoadSequence(sstruct);
+    if (options.GetBoolValue("use_constraints")) inference_engine.UseConstraints(sstruct.GetMapping());
+
+    // load parameters
+    const std::vector<RealT> w(shared.w, shared.w + parameter_manager.GetNumLogicalParameters());
+    inference_engine.LoadValues(w * shared.log_base);
+
+    inference_engine.UpdateEvidenceStructures();
+
+    // perform inference
+    SStruct *solution;
+
+    int N = options.GetIntValue("nsamples");
+
+    //inference_engine.ComputePosterior(); // do we need this
+
+    if (options.GetBoolValue("use_evidence"))
+    {
+        inference_engine.ComputeInsideESS();
+
+    for (int sample_ind = 0; sample_ind < N; sample_ind++) { 
+
+    solution = new SStruct(sstruct);
+    inference_engine.InitRand(sample_ind);
+
+    solution->SetMapping(inference_engine.PredictPairingsStochasticTracebackESS());
+    solution->WriteParensOnly(std::cout);
+    delete solution;
+    }
+
+    } else {
+        inference_engine.ComputeInside();
+    
+    for (int sample_ind = 0; sample_ind < N; sample_ind++) { 
+
+    solution = new SStruct(sstruct);
+    inference_engine.InitRand(sample_ind);
+
+    solution->SetMapping(inference_engine.PredictPairingsStochasticTraceback());
+    solution->WriteParensOnly(std::cout);
+    delete solution;
+    }
+    }
+
+}
+
+
 //////////////////////////////////////////////////////////////////////
 // ComputationEngine::PredictFoldChange() HKWS
 //

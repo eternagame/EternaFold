@@ -936,6 +936,119 @@ void ComputationWrapper<RealT>::PredictFoldChange(const std::vector<int> &units,
     computation_engine.DistributeComputation(ret, shared_info, nonshared_info);
 }
 //////////////////////////////////////////////////////////////////////
+// ComputationWrapper::Sample()
+//
+// Run sampling algorithm on each of the work units.
+//////////////////////////////////////////////////////////////////////
+
+template<class RealT>
+void ComputationWrapper<RealT>::Sample(const std::vector<int> &units,
+                                        const std::vector<RealT> &w,
+                                        RealT gamma,
+                                        RealT log_base)
+{
+    Assert(computation_engine.IsMasterNode(), "Routine should only be called by master process.");
+    if (int(w.size()) > SHARED_PARAMETER_SIZE) Error("SHARED_PARAMETER_SIZE in Config.hpp too small; increase to at least %d.", int(w.size()));
+
+    if (GetOptions().GetBoolValue("verbose_output"))
+    {
+        std::cerr << "Performing predictions with gamma=" << double(gamma) << "..." << std::endl;
+    }
+        
+    std::vector<RealT> ret;
+
+    shared_info.command = SAMPLE;
+    for (size_t i = 0; i < w.size(); i++)
+    {
+        shared_info.w[i] = w[i];
+    }
+    shared_info.gamma = gamma;
+    shared_info.log_base = log_base;
+    
+    nonshared_info.resize(units.size());
+    for (size_t i = 0; i < units.size(); i++)
+    {
+        nonshared_info[i].index = units[i];
+    }
+    
+    computation_engine.DistributeComputation(ret, shared_info, nonshared_info);
+}
+//////////////////////////////////////////////////////////////////////
+// ComputationWrapper::RunREVI()
+//
+// Run REVI on each of the work units.
+//////////////////////////////////////////////////////////////////////
+
+template<class RealT>
+void ComputationWrapper<RealT>::RunREVI(const std::vector<int> &units,
+                                        const std::vector<RealT> &w,
+                                        RealT gamma,
+                                        RealT log_base,
+                                        RealT sigma)
+{
+    Assert(computation_engine.IsMasterNode(), "Routine should only be called by master process.");
+    if (int(w.size()) > SHARED_PARAMETER_SIZE) Error("SHARED_PARAMETER_SIZE in Config.hpp too small; increase to at least %d.", int(w.size()));
+
+    if (GetOptions().GetBoolValue("verbose_output"))
+    {
+        std::cerr << "Performing predictions with gamma=" << double(gamma) << "..." << std::endl;
+    }
+        
+    std::vector<RealT> ret;
+
+    shared_info.command = REVI;
+    for (size_t i = 0; i < w.size(); i++)
+    {
+        shared_info.w[i] = w[i];
+    }
+    shared_info.gamma = gamma;
+    shared_info.log_base = log_base;
+    shared_info.sigma = sigma;
+    
+    nonshared_info.resize(units.size());
+    for (size_t i = 0; i < units.size(); i++)
+    {
+        nonshared_info[i].index = units[i];
+    }
+    
+    computation_engine.DistributeComputation(ret, shared_info, nonshared_info);
+}
+//////////////////////////////////////////////////////////////////////
+// ComputationWrapper::TestEnergies()
+//
+// Run energy test.
+//////////////////////////////////////////////////////////////////////
+
+template<class RealT>
+void ComputationWrapper<RealT>::TestEnergies(const std::vector<int> &units,
+                                        const std::vector<RealT> &w,
+                                        RealT gamma,
+                                        RealT log_base)
+{
+    Assert(computation_engine.IsMasterNode(), "Routine should only be called by master process.");
+    if (int(w.size()) > SHARED_PARAMETER_SIZE) Error("SHARED_PARAMETER_SIZE in Config.hpp too small; increase to at least %d.", int(w.size()));
+
+        
+    std::vector<RealT> ret;
+
+    shared_info.command = TEST_ENERGIES;
+    for (size_t i = 0; i < w.size(); i++)
+    {
+        shared_info.w[i] = w[i];
+    }
+    shared_info.gamma = gamma;
+    shared_info.log_base = log_base;
+    
+    nonshared_info.resize(units.size());
+    for (size_t i = 0; i < units.size(); i++)
+    {
+        nonshared_info[i].index = units[i];
+    }
+    
+    computation_engine.DistributeComputation(ret, shared_info, nonshared_info);
+}
+
+//////////////////////////////////////////////////////////////////////
 // ComputationWrapper::SanityCheckGradient()
 //
 // Perform sanity check for the gradient computation.

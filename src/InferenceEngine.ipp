@@ -42,7 +42,7 @@ RealT InferenceEngine<RealT>::ScoreUnpairedPositionEvidence(int i) const
 {
    RealT sum = 0;
    for (int n = 0; n < num_data_sources; n++)
-       sum = sum + score_unpaired_position[n][i-1];
+       sum = sum + kappa*score_unpaired_position[n][i-1];
    return sum;
 }
 #else
@@ -59,7 +59,7 @@ RealT InferenceEngine<RealT>::ScorePairedPositionEvidence(int i) const
 {
    RealT sum = 0;
    for (int n = 0; n < num_data_sources; n++)
-       sum = sum + score_paired_position[n][i-1];
+       sum = sum + kappa * score_paired_position[n][i-1];
    return sum;
 }
 #else
@@ -307,11 +307,12 @@ bool InferenceEngine<RealT>::IsComplementary(int i, int j) const
 //////////////////////////////////////////////////////////////////////
 
 template<class RealT>
-InferenceEngine<RealT>::InferenceEngine(bool allow_noncomplementary, const int num_data_sources) :
+InferenceEngine<RealT>::InferenceEngine(bool allow_noncomplementary, const int num_data_sources, const double kappa) :
     allow_noncomplementary(allow_noncomplementary),
     cache_initialized(false),
     parameter_manager(NULL),
     num_data_sources(num_data_sources),
+    kappa(kappa),
     L(0),
     SIZE(0)
 #if PROFILE
@@ -946,6 +947,92 @@ double InferenceEngine<RealT>::LogGammaProb(RealT data, int which_data, int isUn
     return (k-1)*log(data) - data/theta - lgamma(k) - k*log(theta);
 }
 
+template<class RealT>
+void InferenceEngine<RealT>::UpdateREVIVec(std::vector<RealT> perturb_unpaired, std::vector<RealT> perturb_paired)
+{
+    int which_data = 0; // update if we ever want to do more than one
+
+    for (int i = 0; i < L; i++)
+    {
+        score_unpaired_position[which_data][i] += perturb_unpaired[i];
+        //score_paired_position[which_data][i] += perturb_paired[i];
+    }
+
+    std::cerr << "u_v " << score_unpaired_position[0] << std::endl;
+    std::cerr << "p_v " << score_paired_position[0] << std::endl;
+
+}
+
+template<class RealT>
+std::vector<std::vector<double> > InferenceEngine<RealT>::GetREVIvec_up()
+{
+    return score_unpaired_position;
+}
+
+template<class RealT>
+std::vector<std::vector<double> > InferenceEngine<RealT>::GetREVIvec_pr()
+{
+    return score_paired_position;
+}
+
+template<class RealT>
+std::vector<RealT> InferenceEngine<RealT>::GetREVIError(std::vector<RealT> p_i)
+{
+    int which_data = 0;
+    std::vector<RealT> error;
+
+     for (int i = 0; i < L; i++)
+     {
+
+        // analytical posterior
+    //     RealT pos_paired = 0;
+    //     // get paired posterior
+    //     for (int l = 1; l <= L; l++)
+    //     {
+    //             int offset1 = i <= l ? i : l;
+    //             int offset2 = i > l ? i : l;
+    //             if (i != l)
+    //                 pos_paired += posterior[offset[offset1]+offset2];
+    //     }
+    //     // if (i==1){
+    //     //     std::cerr << "pos_paired " << pos_paired << std::endl;
+    //     // }
+
+    // HWS: reintroduce when using reactivities instead of probabilities
+
+    // RealT k_pr = exp(log_score_evidence[which_data][0][s[i+1]][0].first);
+    // RealT theta_pr = exp(log_score_evidence[which_data][1][s[i+1]][0].first);
+    // RealT k_unp = exp(log_score_evidence[which_data][0][s[i+1]][1].first);
+    // RealT theta_unp = exp(log_score_evidence[which_data][1][s[i+1]][1].first);
+
+        // predict reactivity under this model
+        //RealT rhat = k_pr*theta_pr*(1-p_i[i]) + k_unp*theta_unp*p_i[i];
+        //score_unpaired_position_raw: where raw reacitivty data is stored
+
+        // fitting to raw diff in p(unp values)
+        RealT err = (p_i[i] - score_unpaired_position_raw[which_data][i]);
+
+        error.push_back(err);
+}
+    std::cerr << "sc_up_p_raw " << score_unpaired_position_raw[which_data] << std::endl;
+    return error;
+    
+}
+
+template<class RealT>
+void InferenceEngine<RealT>::InitializeREVIVec()
+{    
+    score_unpaired_position[0].clear();
+    score_paired_position[0].clear();
+    for (int i = 0; i < num_data_sources; i++)
+    {
+        for (int j = 0; j < L; j++)
+    {
+    score_unpaired_position[i].push_back(RealT(0));
+    score_paired_position[i].push_back(RealT(0));
+    }
+}
+}
 
 //////////////////////////////////////////////////////////////////////
 // InferenceEngine::LoadSequence()
@@ -4087,6 +4174,685 @@ std::vector<RealT> InferenceEngine<RealT>::ComputeViterbiFeatureCounts()
 
     FinalizeCounts();
     return GetCounts();
+}
+
+//////////////////////////////////////////////////////////////////////
+// InferenceEngine::GetViterbiFeatures()
+// 
+// Use feature counts from Viterbi decoding.
+//////////////////////////////////////////////////////////////////////
+
+template<class RealT>
+void InferenceEngine<RealT>::GetViterbiFeatures()
+{
+    std::queue<triple<int *,int,int> > traceback_queue;
+    traceback_queue.push(make_triple(&F5t[0], 0, L));
+
+    std::vector<triple<int, int, int> > multiloops;
+    ClearCounts();
+
+    std::map<int, RealT> eos_cb_map;
+    for (int k = -1; k <= L; k++){
+        eos_cb_map[k] = 0;
+    }
+
+    while (!traceback_queue.empty())
+    {
+        triple<int *,int,int> t = traceback_queue.front();
+        traceback_queue.pop();
+        const int *V = t.first;
+        const int i = t.second;
+        const int j = t.third;
+        
+        std::pair<int,int> traceback = DecodeTraceback (V == &F5t[0] ? V[j] : V[offset[i]+j]);
+        
+        //std::cout << (V == FCt ? "FC " : V == FMt ? "FM " : V == FM1t ? "FM1 " : "F5 ");
+        //std::cout << i << " " << j << ": " << traceback.first << " " << traceback.second << std::endl;
+        
+        switch (traceback.first)
+        {
+
+    // HWS: we're not using these params
+#if PARAMS_HELIX_LENGTH || PARAMS_ISOLATED_BASE_PAIR
+            case TB_FN_HAIRPIN: 
+                CountHairpin(i,j,RealT(1));
+                break;
+            case TB_FN_SINGLE: 
+            {
+                const int p = i + traceback.second / (C_MAX_SINGLE_LENGTH+1);
+                const int q = j - traceback.second % (C_MAX_SINGLE_LENGTH+1);
+                CountSingle(i,j,p,q,RealT(1));
+
+                traceback_queue.push(make_triple(&FCt[0], p+1, q-1));
+            }
+            break;
+            case TB_FN_BIFURCATION:
+            {
+                const int k = traceback.second;
+                CountJunctionA(i,j,RealT(1));
+                CountMultiPaired(RealT(1));
+                CountMultiBase(RealT(1));
+
+                traceback_queue.push(make_triple(&FM1t[0], i, k));
+                traceback_queue.push(make_triple(&FMt[0], k, j));
+            }
+            break;
+            case TB_FE_STACKING: 
+            {
+                CountBasePair(i+1,j,RealT(1));
+                CountHelixStacking(i,j+1,RealT(1));
+
+                traceback_queue.push(make_triple(&FEt[0], i+1, j-1));
+            }
+            break;
+            case TB_FE_FN: 
+            {
+                traceback_queue.push(make_triple(&FNt[0], i, j));
+            }
+            break;
+            case TB_FC_FN:
+            {
+                CountIsolated(RealT(1));
+                traceback_queue.push(make_triple(&FNt[0], i, j));
+            }
+            break;
+            case TB_FC_HELIX:
+            {
+                const int m = traceback.second;
+                CountHelix(i-1,j+1,m,RealT(1));
+                traceback_queue.push(make_triple(&FNt[0], i+m-1, j-m+1));
+            }
+            break;
+            case TB_FC_FE:
+            {
+                const int m = D_MAX_HELIX_LENGTH;
+                CountHelix(i-1,j+1,m,RealT(1));
+                traceback_queue.push(make_triple(&FEt[0], i+m-1, j-m+1));
+            }
+            break;
+
+    //HWS: our param sections start here
+#else
+            case TB_FC_HAIRPIN: 
+                //CountHairpin(i,j,RealT(1));
+                //////////////////////////////////////////////////////////////////////
+                // InferenceEngine::ScoreHairpin()
+                // InferenceEngine::CountHairpin()
+                //
+                // Returns the score for a hairpin spanning positions i to j.
+                //
+                // In an RNA structure, this would look like
+                //
+                //                           ...
+                //                       /         \. 
+                //                   x[i+2]       x[j-1]
+                //                      |            |
+                //                   x[i+1]        x[j]
+                // position i -------->  o          o  <----- position j
+                //                      x[i] -- x[j+1]
+                //                        |        |
+                //                     x[i-1] -- x[j+2]
+                //
+                //////////////////////////////////////////////////////////////////////
+
+                //HWS: subtracting off 1 to get zero-indexing for eos_cb
+
+                //std::cerr << "Hairpin " << i-1 << " " << ScoreHairpin(i,j) << std::endl;
+                eos_cb_map[i-1] += ScoreHairpin(i,j);
+
+                break;
+            case TB_FC_SINGLE: 
+            {
+                const int p = i + traceback.second / (C_MAX_SINGLE_LENGTH+1);
+                const int q = j - traceback.second % (C_MAX_SINGLE_LENGTH+1);
+
+                if (p == i && q == j)
+                {
+                    // CountBasePair(i+1,j,RealT(1));
+                    // CountHelixStacking(i,j+1,RealT(1));
+
+                //HWS: subtracting off 1 (from i+1) to get zero-indexing for eos_cb
+
+
+                //std::cerr << "BasePair " << i << " " << ScoreBasePair(i+1,j) << std::endl;
+                eos_cb_map[i] += ScoreBasePair(i+1,j);
+
+
+                // ScoreHelixStacking(i,j): score for a helix stacking pair of the form:
+                //
+                //       |         |
+                //    s[i+1] == s[j-1]
+                //       |         |
+                //     s[i] ==== s[j]
+                //       |         |
+                //HWS: subtracting off 1 (from i) to get zero-indexing for eos_cb
+
+                //std::cerr << "HelixStacking " << i-1 << " " << ScoreHelixStacking(i,j+1) << std::endl;
+                eos_cb_map[i-1] += ScoreHelixStacking(i,j+1);
+
+                }
+                else
+                {
+                    //CountSingle(i,j,p,q,RealT(1));
+                    //here we need to break this down because they sum a bunch of things to make ScoreSingle
+                    // here we need to subtract off the second base pair from ScoreSingle
+                // std::cerr << "Single " << i-1 << " " << ScoreSingle(i,j,p,q)-ScoreBasePair(p+1,q) << std::endl;
+                // std::cerr << "ScoreBasePair " << p << " " << ScoreBasePair(p+1,q) << std::endl;
+
+                eos_cb_map[i-1] += ScoreSingle(i,j,p,q)-ScoreBasePair(p+1,q);
+                eos_cb_map[p] += ScoreBasePair(p+1, q);
+
+                }
+                
+                traceback_queue.push(make_triple(&FCt[0], p+1, q-1));
+            }
+            break;
+            case TB_FC_BIFURCATION:
+            {
+                const int k = traceback.second;
+                // CountJunctionA(i,j,RealT(1));
+                // CountMultiPaired(RealT(1));
+                // CountMultiBase(RealT(1));
+
+                // This is where we first recognize we're in a new multiloop. Store the things at i
+                multiloops.push_back(make_triple(i,j,0));
+                // std::cerr << "New multiloop! " << i << ":" << j << std::endl;
+
+                // std::cerr << "FCBifurc:JunctionA " << i << " " << ScoreJunctionA(i,j) << std::endl;
+                // std::cerr << "FCBifurc:MultiPaired " << i << " " << ScoreMultiPaired() << std::endl;
+                // std::cerr << "FCBifurc:MultiBase " << i << " " << ScoreMultiBase() << std::endl;
+
+                eos_cb_map[i] += ScoreJunctionA(i,j) + ScoreMultiPaired() + ScoreMultiBase();
+
+                traceback_queue.push(make_triple(&FM1t[0], i, k));
+                traceback_queue.push(make_triple(&FMt[0], k, j));
+            }
+            break;
+#endif
+            case TB_FM1_PAIRED:
+            {
+                // CountJunctionA(j,i,RealT(1));
+                // CountMultiPaired(RealT(1));
+                // CountBasePair(i+1,j,RealT(1));
+
+                // HWS: We're in a multiloop -- this gets the index of the 5' base 
+                // of the current multiloop and puts in curr_multiloop ind.
+
+                int min_dist = 100000;
+                int curr_multiloop_ind = -1;
+
+                for(int ind=0; ind < multiloops.size(); ind++){
+                    if (multiloops[ind].first < i < multiloops[ind].second){
+                        if (i - multiloops[ind].first < min_dist){
+                            min_dist = i - multiloops[ind].first;
+                            curr_multiloop_ind = multiloops[ind].first;
+                        }
+                    }
+                }
+
+                // These all go in the multiloop ind
+                //std::cerr << "Paired:JunctionA " << curr_multiloop_ind << " " << ScoreJunctionA(j,i) << std::endl;
+                //std::cerr << "Paired:MultiPaired " << curr_multiloop_ind << " " << ScoreMultiPaired() << std::endl;
+                
+                eos_cb_map[curr_multiloop_ind] += ScoreJunctionA(j,i) + ScoreMultiPaired();
+
+                //This just goes with the next base pair
+                //std::cerr << "Paired:BasePair " << i << " " << ScoreBasePair(i+1, j) << std::endl;
+                eos_cb_map[i] += ScoreBasePair(i+1, j);
+
+                traceback_queue.push(make_triple(&FCt[0], i+1, j-1));
+            }
+            break;
+            case TB_FM1_UNPAIRED:
+            {
+                // CountMultiUnpaired(i+1,RealT(1));
+
+                // HWS: We're in a multiloop -- this gets the index of the 5' base 
+                // of the current multiloop and puts in curr_multiloop ind.
+
+                int min_dist = 100000;
+                int curr_multiloop_ind = -1;
+
+                for(int ind=0; ind < multiloops.size(); ind++){
+                    if (multiloops[ind].first < i+1 < multiloops[ind].second){
+                        if (i+1 - multiloops[ind].first < min_dist){
+                            min_dist = i+1 - multiloops[ind].first;
+                            curr_multiloop_ind = multiloops[ind].first;
+                        }
+                    }
+                }
+                // HWS: a score for unpaired bases in multiloops, put in curr_multiloop ind
+                //std::cerr << "MultiUnpaired " << curr_multiloop_ind << " " << ScoreMultiUnpaired(i+1) << std::endl;
+                eos_cb_map[curr_multiloop_ind] += ScoreMultiUnpaired(i+1);
+
+                traceback_queue.push(make_triple(&FM1t[0], i+1, j));
+            }
+            break;
+            case TB_FM_BIFURCATION:
+            {
+                const int k = traceback.second;
+                traceback_queue.push(make_triple(&FM1t[0], i, k));
+                traceback_queue.push(make_triple(&FMt[0], k, j));
+            }
+            break;
+            case TB_FM_UNPAIRED:
+            {
+                // CountMultiUnpaired(j,RealT(1));
+
+                // HWS: We're in a multiloop -- this gets the index of the 5' base 
+                // of the current multiloop and puts in curr_multiloop ind.
+
+                int min_dist = 100000;
+                int curr_multiloop_ind = -1;
+
+                for(int ind=0; ind < multiloops.size(); ind++){
+                    if (multiloops[ind].first < j < multiloops[ind].second){
+                        if (j - multiloops[ind].first < min_dist){
+                            min_dist = j - multiloops[ind].first;
+                            curr_multiloop_ind = multiloops[ind].first;
+                        }
+                    }
+                }
+                // HWS: a score for unpaired bases in multiloops, put in curr_multiloop ind
+
+                //std::cerr << "MultiUnpaired " << curr_multiloop_ind << " " << ScoreMultiUnpaired(j) << std::endl;
+                eos_cb_map[curr_multiloop_ind] += ScoreMultiUnpaired(j);
+
+                traceback_queue.push(make_triple(&FMt[0], i, j-1));
+            }
+            break;
+            case TB_FM_FM1: 
+                traceback_queue.push(make_triple(&FM1t[0], i, j));
+                break;
+            case TB_F5_ZERO:
+                break;
+            case TB_F5_UNPAIRED:
+                CountExternalUnpaired(j,RealT(1));
+
+                // HWS: a score for unpaired things in the external loop, dump into the -1 eos_cb
+
+                //std::cerr << "ExternalUnpaired -1 " << ScoreExternalUnpaired(j) << std::endl;
+                eos_cb_map[-1] += ScoreExternalUnpaired(j);
+
+                traceback_queue.push(make_triple(&F5t[0], 0, j-1));
+                break;
+            case TB_F5_BIFURCATION:
+            {
+                const int k = traceback.second;
+                // CountExternalPaired(RealT(1));
+                // CountBasePair(k+1,j,RealT(1));
+                // CountJunctionA(j,k,RealT(1));
+                traceback_queue.push(make_triple(&F5t[0], 0, k));
+                traceback_queue.push(make_triple(&FCt[0], k+1, j-1));
+
+                //HWS: this is base pairs facing external loop. Hard-coding to print -1 as thinking these 
+                //should get summed in to the -1 "external loop " eos_cb category
+                
+                //std::cerr << "F5Bifurc:ExternalPaired -1 " << ScoreExternalPaired() << std::endl;
+                //std::cerr << "F5Bifurc:JunctionA -1 " << ScoreJunctionA(j,k) << std::endl;
+                eos_cb_map[-1] += ScoreExternalPaired()+ScoreJunctionA(j,k);
+
+                // HWS: another base pair, print (k+1) - 1 to zero-index
+                //std::cerr << "F5Bifurc:BasePair " << k << " " << ScoreBasePair(k+1, j) << std::endl;
+                eos_cb_map[k] += ScoreBasePair(k+1, j);
+
+            }
+            break;
+            default:
+                Assert(false, "Bad traceback.");
+        }
+    }
+    RealT local_sum = 0;
+    std::cerr << "EOS_CB: ";
+    for (std::pair<int, RealT> element : eos_cb_map) {
+        if (element.first == -1 || element.second != 0){
+        std::cerr << element.first << ", " << element.second << ", ";
+        local_sum += element.second;
+    }
+    }
+    std::cerr << std::endl;
+    std::cerr << "local sum " << local_sum << std::endl;
+
+}
+
+//////////////////////////////////////////////////////////////////////
+// InferenceEngine::GetViterbiFeaturesESS()
+// 
+// Use feature counts from Viterbi decoding, using evidence-based energies.
+//////////////////////////////////////////////////////////////////////
+
+template<class RealT>
+void InferenceEngine<RealT>::GetViterbiFeaturesESS()
+{
+    std::queue<triple<int *,int,int> > traceback_queue;
+    traceback_queue.push(make_triple(&F5t[0], 0, L));
+
+    std::vector<triple<int, int, int> > multiloops;
+    ClearCounts();
+
+    std::map<int, RealT> eos_cb_map;
+    for (int k = -1; k <= L; k++){
+        eos_cb_map[k] = 0;
+    }
+
+    while (!traceback_queue.empty())
+    {
+        triple<int *,int,int> t = traceback_queue.front();
+        traceback_queue.pop();
+        const int *V = t.first;
+        const int i = t.second;
+        const int j = t.third;
+        
+        std::pair<int,int> traceback = DecodeTraceback (V == &F5t[0] ? V[j] : V[offset[i]+j]);
+        
+        //std::cout << (V == FCt ? "FC " : V == FMt ? "FM " : V == FM1t ? "FM1 " : "F5 ");
+        //std::cout << i << " " << j << ": " << traceback.first << " " << traceback.second << std::endl;
+        
+        switch (traceback.first)
+        {
+
+    // HWS: we're not using these params
+#if PARAMS_HELIX_LENGTH || PARAMS_ISOLATED_BASE_PAIR
+            case TB_FN_HAIRPIN: 
+                CountHairpin(i,j,RealT(1));
+                break;
+            case TB_FN_SINGLE: 
+            {
+                const int p = i + traceback.second / (C_MAX_SINGLE_LENGTH+1);
+                const int q = j - traceback.second % (C_MAX_SINGLE_LENGTH+1);
+                CountSingle(i,j,p,q,RealT(1));
+
+                traceback_queue.push(make_triple(&FCt[0], p+1, q-1));
+            }
+            break;
+            case TB_FN_BIFURCATION:
+            {
+                const int k = traceback.second;
+                CountJunctionA(i,j,RealT(1));
+                CountMultiPaired(RealT(1));
+                CountMultiBase(RealT(1));
+
+                traceback_queue.push(make_triple(&FM1t[0], i, k));
+                traceback_queue.push(make_triple(&FMt[0], k, j));
+            }
+            break;
+            case TB_FE_STACKING: 
+            {
+                CountBasePair(i+1,j,RealT(1));
+                CountHelixStacking(i,j+1,RealT(1));
+
+                traceback_queue.push(make_triple(&FEt[0], i+1, j-1));
+            }
+            break;
+            case TB_FE_FN: 
+            {
+                traceback_queue.push(make_triple(&FNt[0], i, j));
+            }
+            break;
+            case TB_FC_FN:
+            {
+                CountIsolated(RealT(1));
+                traceback_queue.push(make_triple(&FNt[0], i, j));
+            }
+            break;
+            case TB_FC_HELIX:
+            {
+                const int m = traceback.second;
+                CountHelix(i-1,j+1,m,RealT(1));
+                traceback_queue.push(make_triple(&FNt[0], i+m-1, j-m+1));
+            }
+            break;
+            case TB_FC_FE:
+            {
+                const int m = D_MAX_HELIX_LENGTH;
+                CountHelix(i-1,j+1,m,RealT(1));
+                traceback_queue.push(make_triple(&FEt[0], i+m-1, j-m+1));
+            }
+            break;
+
+    //HWS: our param sections start here
+#else
+            case TB_FC_HAIRPIN: 
+                //CountHairpin(i,j,RealT(1));
+                //////////////////////////////////////////////////////////////////////
+                // InferenceEngine::ScoreHairpin()
+                // InferenceEngine::CountHairpin()
+                //
+                // Returns the score for a hairpin spanning positions i to j.
+                //
+                // In an RNA structure, this would look like
+                //
+                //                           ...
+                //                       /         \. 
+                //                   x[i+2]       x[j-1]
+                //                      |            |
+                //                   x[i+1]        x[j]
+                // position i -------->  o          o  <----- position j
+                //                      x[i] -- x[j+1]
+                //                        |        |
+                //                     x[i-1] -- x[j+2]
+                //
+                //////////////////////////////////////////////////////////////////////
+
+                //HWS: subtracting off 1 to get zero-indexing for eos_cb
+
+                //std::cerr << "Hairpin " << i-1 << " " << ScoreHairpin(i,j) << std::endl;
+                eos_cb_map[i-1] += ScoreHairpinEvidence(i,j);
+
+                break;
+            case TB_FC_SINGLE: 
+            {
+                const int p = i + traceback.second / (C_MAX_SINGLE_LENGTH+1);
+                const int q = j - traceback.second % (C_MAX_SINGLE_LENGTH+1);
+
+                if (p == i && q == j)
+                {
+                    // CountBasePair(i+1,j,RealT(1));
+                    // CountHelixStacking(i,j+1,RealT(1));
+
+                //HWS: subtracting off 1 (from i+1) to get zero-indexing for eos_cb
+
+
+                //std::cerr << "BasePair " << i << " " << ScoreBasePair(i+1,j) << std::endl;
+                eos_cb_map[i] += ScoreBasePairEvidence(i+1,j);
+
+
+                // ScoreHelixStacking(i,j): score for a helix stacking pair of the form:
+                //
+                //       |         |
+                //    s[i+1] == s[j-1]
+                //       |         |
+                //     s[i] ==== s[j]
+                //       |         |
+                //HWS: subtracting off 1 (from i) to get zero-indexing for eos_cb
+
+                //std::cerr << "HelixStacking " << i-1 << " " << ScoreHelixStacking(i,j+1) << std::endl;
+                eos_cb_map[i-1] += ScoreHelixStacking(i,j+1);
+
+                }
+                else
+                {
+                    //CountSingle(i,j,p,q,RealT(1));
+                    //here we need to break this down because they sum a bunch of things to make ScoreSingle
+                    // here we need to subtract off the second base pair from ScoreSingle
+                // std::cerr << "Single " << i-1 << " " << ScoreSingle(i,j,p,q)-ScoreBasePair(p+1,q) << std::endl;
+                // std::cerr << "ScoreBasePair " << p << " " << ScoreBasePair(p+1,q) << std::endl;
+
+                eos_cb_map[i-1] += ScoreSingleEvidence(i,j,p,q)-ScoreBasePairEvidence(p+1,q);
+                eos_cb_map[p] += ScoreBasePairEvidence(p+1, q);
+
+                }
+                
+                traceback_queue.push(make_triple(&FCt[0], p+1, q-1));
+            }
+            break;
+            case TB_FC_BIFURCATION:
+            {
+                const int k = traceback.second;
+                // CountJunctionA(i,j,RealT(1));
+                // CountMultiPaired(RealT(1));
+                // CountMultiBase(RealT(1));
+
+                // This is where we first recognize we're in a new multiloop. Store the things at i
+                multiloops.push_back(make_triple(i,j,0));
+                // std::cerr << "New multiloop! " << i << ":" << j << std::endl;
+
+                // std::cerr << "FCBifurc:JunctionA " << i << " " << ScoreJunctionA(i,j) << std::endl;
+                // std::cerr << "FCBifurc:MultiPaired " << i << " " << ScoreMultiPaired() << std::endl;
+                // std::cerr << "FCBifurc:MultiBase " << i << " " << ScoreMultiBase() << std::endl;
+
+                eos_cb_map[i] += ScoreJunctionA(i,j) + ScoreMultiPaired() + ScoreMultiBase();
+
+                traceback_queue.push(make_triple(&FM1t[0], i, k));
+                traceback_queue.push(make_triple(&FMt[0], k, j));
+            }
+            break;
+#endif
+            case TB_FM1_PAIRED:
+            {
+                // CountJunctionA(j,i,RealT(1));
+                // CountMultiPaired(RealT(1));
+                // CountBasePair(i+1,j,RealT(1));
+
+                // HWS: We're in a multiloop -- this gets the index of the 5' base 
+                // of the current multiloop and puts in curr_multiloop ind.
+
+                int min_dist = 100000;
+                int curr_multiloop_ind = -1;
+
+                for(int ind=0; ind < multiloops.size(); ind++){
+                    if (multiloops[ind].first < i < multiloops[ind].second){
+                        if (i - multiloops[ind].first < min_dist){
+                            min_dist = i - multiloops[ind].first;
+                            curr_multiloop_ind = multiloops[ind].first;
+                        }
+                    }
+                }
+
+                // These all go in the multiloop ind
+                //std::cerr << "Paired:JunctionA " << curr_multiloop_ind << " " << ScoreJunctionA(j,i) << std::endl;
+                //std::cerr << "Paired:MultiPaired " << curr_multiloop_ind << " " << ScoreMultiPaired() << std::endl;
+                
+                eos_cb_map[curr_multiloop_ind] += ScoreJunctionA(j,i) + ScoreMultiPaired();
+
+                //This just goes with the next base pair
+                //std::cerr << "Paired:BasePair " << i << " " << ScoreBasePair(i+1, j) << std::endl;
+                eos_cb_map[i] += ScoreBasePairEvidence(i+1, j);
+
+                traceback_queue.push(make_triple(&FCt[0], i+1, j-1));
+            }
+            break;
+            case TB_FM1_UNPAIRED:
+            {
+                // CountMultiUnpaired(i+1,RealT(1));
+
+                // HWS: We're in a multiloop -- this gets the index of the 5' base 
+                // of the current multiloop and puts in curr_multiloop ind.
+
+                int min_dist = 100000;
+                int curr_multiloop_ind = -1;
+
+                for(int ind=0; ind < multiloops.size(); ind++){
+                    if (multiloops[ind].first < i+1 < multiloops[ind].second){
+                        if (i+1 - multiloops[ind].first < min_dist){
+                            min_dist = i+1 - multiloops[ind].first;
+                            curr_multiloop_ind = multiloops[ind].first;
+                        }
+                    }
+                }
+                // HWS: a score for unpaired bases in multiloops, put in curr_multiloop ind
+                //std::cerr << "MultiUnpaired " << curr_multiloop_ind << " " << ScoreMultiUnpaired(i+1) << std::endl;
+                eos_cb_map[curr_multiloop_ind] += ScoreMultiUnpairedEvidence(i+1);
+
+                traceback_queue.push(make_triple(&FM1t[0], i+1, j));
+            }
+            break;
+            case TB_FM_BIFURCATION:
+            {
+                const int k = traceback.second;
+                traceback_queue.push(make_triple(&FM1t[0], i, k));
+                traceback_queue.push(make_triple(&FMt[0], k, j));
+            }
+            break;
+            case TB_FM_UNPAIRED:
+            {
+                // CountMultiUnpaired(j,RealT(1));
+
+                // HWS: We're in a multiloop -- this gets the index of the 5' base 
+                // of the current multiloop and puts in curr_multiloop ind.
+
+                int min_dist = 100000;
+                int curr_multiloop_ind = -1;
+
+                for(int ind=0; ind < multiloops.size(); ind++){
+                    if (multiloops[ind].first < j < multiloops[ind].second){
+                        if (j - multiloops[ind].first < min_dist){
+                            min_dist = j - multiloops[ind].first;
+                            curr_multiloop_ind = multiloops[ind].first;
+                        }
+                    }
+                }
+                // HWS: a score for unpaired bases in multiloops, put in curr_multiloop ind
+
+                //std::cerr << "MultiUnpaired " << curr_multiloop_ind << " " << ScoreMultiUnpaired(j) << std::endl;
+                eos_cb_map[curr_multiloop_ind] += ScoreMultiUnpairedEvidence(j);
+
+                traceback_queue.push(make_triple(&FMt[0], i, j-1));
+            }
+            break;
+            case TB_FM_FM1: 
+                traceback_queue.push(make_triple(&FM1t[0], i, j));
+                break;
+            case TB_F5_ZERO:
+                break;
+            case TB_F5_UNPAIRED:
+                CountExternalUnpaired(j,RealT(1));
+
+                // HWS: a score for unpaired things in the external loop, dump into the -1 eos_cb
+
+                //std::cerr << "ExternalUnpaired -1 " << ScoreExternalUnpaired(j) << std::endl;
+                eos_cb_map[-1] += ScoreExternalUnpairedEvidence(j);
+
+
+                traceback_queue.push(make_triple(&F5t[0], 0, j-1));
+                break;
+            case TB_F5_BIFURCATION:
+            {
+                const int k = traceback.second;
+                CountExternalPaired(RealT(1));
+                CountBasePair(k+1,j,RealT(1));
+                CountJunctionA(j,k,RealT(1));
+                traceback_queue.push(make_triple(&F5t[0], 0, k));
+                traceback_queue.push(make_triple(&FCt[0], k+1, j-1));
+                //HWS: this is base pairs facing external loop. Hard-coding to print -1 as thinking these 
+                //should get summed in to the -1 "external loop " eos_cb category
+                
+                //std::cerr << "F5Bifurc:ExternalPaired -1 " << ScoreExternalPaired() << std::endl;
+                //std::cerr << "F5Bifurc:JunctionA -1 " << ScoreJunctionA(j,k) << std::endl;
+                eos_cb_map[-1] += ScoreExternalPaired()+ScoreJunctionA(j,k); //TODO: ScoreExternalPairedEvidence
+ 
+                // HWS: another base pair, print (k+1) - 1 to zero-index
+                //std::cerr << "F5Bifurc:BasePair " << k << " " << ScoreBasePair(k+1, j) << std::endl;
+                eos_cb_map[k] += ScoreBasePairEvidence(k+1, j);
+
+            }
+            break;
+            default:
+                Assert(false, "Bad traceback.");
+        }
+    }
+
+    RealT local_sum = 0;
+    std::cerr << "EOS_CB: ";
+    for (std::pair<int, RealT> element : eos_cb_map) {
+        if (element.first == -1 || element.second != 0){
+        std::cerr << element.first << ", " << element.second << ", ";
+        local_sum += element.second;
+    }
+    }
+    std::cerr << std::endl;
+    std::cerr << "local sum " << local_sum << std::endl;
+
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -7745,8 +8511,8 @@ std::vector<RealT> InferenceEngine<RealT>::ComputeGammaMLESS(std::vector<int> ev
     RealT sum1 = 0;
     RealT sum2 = 0;
     int N = 0;
-    int i = ev_cpd_id[0];
-    int j = ev_cpd_id[1];
+    int i = ev_cpd_id[0]; // nucleotide type
+    int j = ev_cpd_id[1]; // paired or unpaired
 
     double score_up = 0;
 
@@ -7939,4 +8705,500 @@ int InferenceEngine<RealT>::AreZerosInSeq(int id_base, int which_data)
     }
     return areZeros;
 }
+
+template<class RealT>
+void InferenceEngine<RealT>::InitRand(unsigned int seed)
+{
+    if (die) delete die;
+    die = new Die(seed);
+}
+
+// stochastic traceback algorithm
+template<class RealT>
+std::vector<int> InferenceEngine<RealT>::PredictPairingsStochasticTraceback() const
+{
+    enum { ST_FC, ST_F5, ST_FM, ST_FM1, ST_FE, ST_FN };
+
+    std::vector<int> solution(L+1,SStruct::UNPAIRED);
+    solution[0] = SStruct::UNKNOWN;
+
+    std::queue<triple<int,int,int> > traceback_queue;
+    traceback_queue.push(make_triple(int(ST_F5), 0, L));
+
+    while (!traceback_queue.empty())
+    {
+        triple<int,int,int> t = traceback_queue.front();
+        traceback_queue.pop();
+        const int i = t.second;
+        const int j = t.third;
+        int L2 = L; // ed to remove max bp dist
+
+        switch (t.first)
+        {
+#if PARAMS_HELIX_LENGTH || PARAMS_ISOLATED_BASE_PAIR
+            case ST_FC:
+                break;
+            case ST_FE:
+                break;
+            case ST_FN:
+                break;
+#else
+            case ST_FC:
+            {
+                if (0 < i && j < L2 && allow_paired[offset[i]+j+1]) // ???
+                {
+                    Roulette<int,RealT> roulette(*die);
+                
+                    // compute ScoreHairpin(i,j)
+                    if (allow_unpaired[offset[i]+j] && j-i >= C_MIN_HAIRPIN_LENGTH)
+                        roulette.add(EncodeTraceback(TB_FC_HAIRPIN,0), ScoreHairpin(i,j));
+                
+                    // compute SUM (i<=p<p+2<=q<=j : ScoreSingle(i,j,p,q) + FC[p+1,q-1])
+                    for (int p = i; p <= std::min(i+C_MAX_SINGLE_LENGTH,j); p++)
+                    {
+                        if (p > i && !allow_unpaired_position[p]) break;
+                        int q_min = std::max(p+2,p-i+j-C_MAX_SINGLE_LENGTH);
+                        for (int q = j; q >= q_min; q--)
+                        {
+                            if (q < j && !allow_unpaired_position[q+1]) break;
+                            if (!allow_paired[offset[p+1]+q]) continue;
+
+                            if (p == i && q == j)
+                            {
+                                roulette.add(EncodeTraceback(TB_FC_SINGLE,(p-i)*(C_MAX_SINGLE_LENGTH+1)+j-q),
+                                             ScoreBasePair(i+1,j) + ScoreHelixStacking(i,j+1) +
+                                             FCi[offset[p+1]+q-1]);
+                            }
+                            else
+                            {
+                                roulette.add(EncodeTraceback(TB_FC_SINGLE,(p-i)*(C_MAX_SINGLE_LENGTH+1)+j-q),
+                                             ScoreSingle(i,j,p,q) + FCi[offset[p+1]+q-1]);
+                            }
+                        }
+                    }
+
+                    // compute SUM (i<k<j : FM1[i,k] + FM[k,j] + ScoreJunctionA(i,j) + a + c)
+                    for (int k=i+1; k < j; k++)
+                    {
+                        RealT FM2i = FM1i[offset[i]+k] + FMi[offset[k]+j];
+                        RealT val = FM2i + ScoreJunctionA(i,j) + ScoreMultiPaired() + ScoreMultiBase();
+                        roulette.add(EncodeTraceback(TB_FC_BIFURCATION, k), val);
+                    }
+
+                    // choose
+                    std::pair<int,int> traceback = DecodeTraceback(roulette.choose());
+                    switch (traceback.first)
+                    {
+                        case TB_FC_HAIRPIN: 
+                            break;
+                        case TB_FC_SINGLE: 
+                        {
+                            const int p = i + traceback.second / (C_MAX_SINGLE_LENGTH+1);
+                            const int q = j - traceback.second % (C_MAX_SINGLE_LENGTH+1);
+                            solution[p+1] = q;
+                            solution[q] = p+1;
+                            traceback_queue.push(make_triple(int(ST_FC), p+1, q-1));
+                        }
+                        break;
+                        case TB_FC_BIFURCATION:
+                        {
+                            const int k = traceback.second;
+                            traceback_queue.push(make_triple(int(ST_FM1), i, k));
+                            traceback_queue.push(make_triple(int(ST_FM), k, j));
+                        }
+                        break;
+                    }
+                } //else { Assert(!, "unreachable"); }
+            } 
+            break;
+#endif
+
+            case ST_FM:
+                if (0 < i && i+2 <= j && j < L2) // ???
+                {
+                    Roulette<int,RealT> roulette(*die);
+
+                    // compute SUM (i<k<j : FM1[i,k] + FM[k,j]) 
+                    for (int k=i+1; k < j; k++)
+                    {
+                        RealT FM2i = FM1i[offset[i]+k] + FMi[offset[k]+j];
+                        roulette.add(EncodeTraceback(TB_FM_BIFURCATION, k), FM2i);
+                    }
+
+                    // compute FM[i,j-1] + b
+                    if (allow_unpaired_position[j])
+                    {
+                        roulette.add(EncodeTraceback(TB_FM_UNPAIRED,0),
+                                     FMi[offset[i]+j-1] + ScoreMultiUnpaired(j));
+                    }
+
+                    // compute FM1[i,j]
+                    roulette.add(EncodeTraceback(TB_FM_FM1,0), FM1i[offset[i]+j]);
+
+                    // choose
+                    std::pair<int,int> traceback = DecodeTraceback(roulette.choose());
+                    switch (traceback.first)
+                    {
+                        case TB_FM_BIFURCATION:
+                        {
+                            const int k = traceback.second;
+                            traceback_queue.push(make_triple(int(ST_FM1), i, k));
+                            traceback_queue.push(make_triple(int(ST_FM), k, j));
+                        }
+                        break;
+                        case TB_FM_UNPAIRED:
+                        {
+                            traceback_queue.push(make_triple(int(ST_FM), i, j-1));
+                        }
+                        break;
+                        case TB_FM_FM1: 
+                        {
+                            traceback_queue.push(make_triple(int(ST_FM1), i, j));
+                        }
+                        break;
+                    }
+                
+                } //else { Assert(!, "unreachable"); }
+                break;
+
+            case ST_FM1:
+                if (0 < i && i+2 <= j && j < L2) // ???
+                {
+                    Roulette<int,RealT> roulette(*die);
+
+                    // compute FC[i+1,j-1] + ScoreJunctionA(j,i) + c + ScoreBP(i+1,j)
+                    if (allow_paired[offset[i+1]+j])
+                    {
+                        RealT value = FCi[offset[i+1]+j-1] + ScoreJunctionA(j,i) +
+                            ScoreMultiPaired() + ScoreBasePair(i+1,j);
+                        roulette.add(EncodeTraceback(TB_FM1_PAIRED, 0), value);
+                    }
+                
+                    // compute FM1[i+1,j] + b
+                    if (allow_unpaired_position[i+1])
+                    {
+                        roulette.add(EncodeTraceback(TB_FM1_UNPAIRED,0),
+                                     FM1i[offset[i+1]+j] + ScoreMultiUnpaired(i+1));
+                    }
+
+                    // choose
+                    std::pair<int,int> traceback = DecodeTraceback(roulette.choose());
+                    switch (traceback.first)
+                    {
+                        case TB_FM1_PAIRED:
+                        {
+                            solution[i+1] = j;
+                            solution[j] = i+1;
+                            traceback_queue.push(make_triple(int(ST_FC), i+1, j-1));
+                        }
+                        break;
+                        case TB_FM1_UNPAIRED:
+                        {
+                            traceback_queue.push(make_triple(int(ST_FM1), i+1, j));
+                        }
+                        break;
+                    }
+                } //else { Assert(!, "unreachable"); }
+                break;
+
+            case ST_F5:
+                if (j!=0)
+                {
+                    Roulette<int,RealT> roulette(*die);
+
+                    // compute F5[j-1] + ScoreExternalUnpaired()
+                    if (allow_unpaired_position[j])
+                    {
+                        roulette.add(EncodeTraceback(TB_F5_UNPAIRED,0),
+                                     F5i[j-1] + ScoreExternalUnpaired(j));
+                    }
+        
+                    // compute SUM (0<=k<j : F5[k] + FC[k+1,j-1] + ScoreExternalPaired() + ScoreBP(k+1,j) + ScoreJunctionA(j,k))
+                    int l = 0; // ed remove max bp dist
+                    for (int k = l; k < j; k++)
+                    {
+                        if (allow_paired[offset[k+1]+j])
+                        {
+                            RealT value = F5i[k] + FCi[offset[k+1]+j-1] + ScoreExternalPaired() +
+                                ScoreBasePair(k+1,j) + ScoreJunctionA(j,k);
+                            roulette.add(EncodeTraceback(TB_F5_BIFURCATION,k), value);
+                        }      
+                    }
+
+                    // choose
+                    std::pair<int,int> traceback = DecodeTraceback(roulette.choose());
+                    switch (traceback.first)
+                    {
+                        case TB_F5_ZERO:
+                            break;
+                        case TB_F5_UNPAIRED:
+                        {
+                            traceback_queue.push(make_triple(int(ST_F5), 0, j-1));
+                        }
+                        break;
+                        case TB_F5_BIFURCATION:
+                        {
+                            const int k = traceback.second;
+                            solution[k+1] = j;
+                            solution[j] = k+1;
+                            traceback_queue.push(make_triple(int(ST_F5), 0, k));
+                            traceback_queue.push(make_triple(int(ST_FC), k+1, j-1));
+                        }
+                        break;
+                    }
+                }
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    return solution;
+}
+
+// stochastic traceback algorithm with chemical mapping data
+template<class RealT>
+std::vector<int> InferenceEngine<RealT>::PredictPairingsStochasticTracebackESS() const
+{
+    enum { ST_FC, ST_F5, ST_FM, ST_FM1, ST_FE, ST_FN };
+
+    std::vector<int> solution(L+1,SStruct::UNPAIRED);
+    solution[0] = SStruct::UNKNOWN;
+
+    std::queue<triple<int,int,int> > traceback_queue;
+    traceback_queue.push(make_triple(int(ST_F5), 0, L));
+
+    while (!traceback_queue.empty())
+    {
+        triple<int,int,int> t = traceback_queue.front();
+        traceback_queue.pop();
+        const int i = t.second;
+        const int j = t.third;
+        int L2 = L; // ed to remove max bp dist
+
+        switch (t.first)
+        {
+#if PARAMS_HELIX_LENGTH || PARAMS_ISOLATED_BASE_PAIR
+            case ST_FC:
+                break;
+            case ST_FE:
+                break;
+            case ST_FN:
+                break;
+#else
+            case ST_FC:
+            {
+                if (0 < i && j < L2 && allow_paired[offset[i]+j+1]) // ???
+                {
+                    Roulette<int,RealT> roulette(*die);
+                
+                    // compute ScoreHairpin(i,j)
+                    if (allow_unpaired[offset[i]+j] && j-i >= C_MIN_HAIRPIN_LENGTH)
+                        roulette.add(EncodeTraceback(TB_FC_HAIRPIN,0), ScoreHairpinEvidence(i,j));
+                
+                    // compute SUM (i<=p<p+2<=q<=j : ScoreSingle(i,j,p,q) + FC[p+1,q-1])
+                    for (int p = i; p <= std::min(i+C_MAX_SINGLE_LENGTH,j); p++)
+                    {
+                        if (p > i && !allow_unpaired_position[p]) break;
+                        int q_min = std::max(p+2,p-i+j-C_MAX_SINGLE_LENGTH);
+                        for (int q = j; q >= q_min; q--)
+                        {
+                            if (q < j && !allow_unpaired_position[q+1]) break;
+                            if (!allow_paired[offset[p+1]+q]) continue;
+
+                            if (p == i && q == j)
+                            {
+                                roulette.add(EncodeTraceback(TB_FC_SINGLE,(p-i)*(C_MAX_SINGLE_LENGTH+1)+j-q),
+                                             ScoreBasePairEvidence(i+1,j) + ScoreHelixStacking(i,j+1) +
+                                             FCi_ess[offset[p+1]+q-1]);
+                            }
+                            else
+                            {
+                                roulette.add(EncodeTraceback(TB_FC_SINGLE,(p-i)*(C_MAX_SINGLE_LENGTH+1)+j-q),
+                                             ScoreSingleEvidence(i,j,p,q) + FCi_ess[offset[p+1]+q-1]);
+                            }
+                        }
+                    }
+
+                    // compute SUM (i<k<j : FM1[i,k] + FM[k,j] + ScoreJunctionA(i,j) + a + c)
+                    for (int k=i+1; k < j; k++)
+                    {
+                        RealT FM2i = FM1i_ess[offset[i]+k] + FMi_ess[offset[k]+j];
+                        RealT val = FM2i + ScoreJunctionA(i,j) + ScoreMultiPaired() + ScoreMultiBase();
+                        roulette.add(EncodeTraceback(TB_FC_BIFURCATION, k), val);
+                    }
+
+                    // choose
+                    std::pair<int,int> traceback = DecodeTraceback(roulette.choose());
+                    switch (traceback.first)
+                    {
+                        case TB_FC_HAIRPIN: 
+                            break;
+                        case TB_FC_SINGLE: 
+                        {
+                            const int p = i + traceback.second / (C_MAX_SINGLE_LENGTH+1);
+                            const int q = j - traceback.second % (C_MAX_SINGLE_LENGTH+1);
+                            solution[p+1] = q;
+                            solution[q] = p+1;
+                            traceback_queue.push(make_triple(int(ST_FC), p+1, q-1));
+                        }
+                        break;
+                        case TB_FC_BIFURCATION:
+                        {
+                            const int k = traceback.second;
+                            traceback_queue.push(make_triple(int(ST_FM1), i, k));
+                            traceback_queue.push(make_triple(int(ST_FM), k, j));
+                        }
+                        break;
+                    }
+                } //else { Assert(!, "unreachable"); }
+            } 
+            break;
+#endif
+
+            case ST_FM:
+                if (0 < i && i+2 <= j && j < L2) // ???
+                {
+                    Roulette<int,RealT> roulette(*die);
+
+                    // compute SUM (i<k<j : FM1[i,k] + FM[k,j]) 
+                    for (int k=i+1; k < j; k++)
+                    {
+                        RealT FM2i = FM1i_ess[offset[i]+k] + FMi_ess[offset[k]+j];
+                        roulette.add(EncodeTraceback(TB_FM_BIFURCATION, k), FM2i);
+                    }
+
+                    // compute FM[i,j-1] + b
+                    if (allow_unpaired_position[j])
+                    {
+                        roulette.add(EncodeTraceback(TB_FM_UNPAIRED,0),
+                                     FMi_ess[offset[i]+j-1] + ScoreMultiUnpairedEvidence(j));
+                    }
+
+                    // compute FM1[i,j]
+                    roulette.add(EncodeTraceback(TB_FM_FM1,0), FM1i_ess[offset[i]+j]);
+
+                    // choose
+                    std::pair<int,int> traceback = DecodeTraceback(roulette.choose());
+                    switch (traceback.first)
+                    {
+                        case TB_FM_BIFURCATION:
+                        {
+                            const int k = traceback.second;
+                            traceback_queue.push(make_triple(int(ST_FM1), i, k));
+                            traceback_queue.push(make_triple(int(ST_FM), k, j));
+                        }
+                        break;
+                        case TB_FM_UNPAIRED:
+                        {
+                            traceback_queue.push(make_triple(int(ST_FM), i, j-1));
+                        }
+                        break;
+                        case TB_FM_FM1: 
+                        {
+                            traceback_queue.push(make_triple(int(ST_FM1), i, j));
+                        }
+                        break;
+                    }
+                
+                } //else { Assert(!, "unreachable"); }
+                break;
+
+            case ST_FM1:
+                if (0 < i && i+2 <= j && j < L2) // ???
+                {
+                    Roulette<int,RealT> roulette(*die);
+
+                    // compute FC[i+1,j-1] + ScoreJunctionA(j,i) + c + ScoreBP(i+1,j)
+                    if (allow_paired[offset[i+1]+j])
+                    {
+                        RealT value = FCi_ess[offset[i+1]+j-1] + ScoreJunctionA(j,i) +
+                            ScoreMultiPaired() + ScoreBasePairEvidence(i+1,j);
+                        roulette.add(EncodeTraceback(TB_FM1_PAIRED, 0), value);
+                    }
+                
+                    // compute FM1[i+1,j] + b
+                    if (allow_unpaired_position[i+1])
+                    {
+                        roulette.add(EncodeTraceback(TB_FM1_UNPAIRED,0),
+                                     FM1i_ess[offset[i+1]+j] + ScoreMultiUnpaired(i+1));
+                    }
+
+                    // choose
+                    std::pair<int,int> traceback = DecodeTraceback(roulette.choose());
+                    switch (traceback.first)
+                    {
+                        case TB_FM1_PAIRED:
+                        {
+                            solution[i+1] = j;
+                            solution[j] = i+1;
+                            traceback_queue.push(make_triple(int(ST_FC), i+1, j-1));
+                        }
+                        break;
+                        case TB_FM1_UNPAIRED:
+                        {
+                            traceback_queue.push(make_triple(int(ST_FM1), i+1, j));
+                        }
+                        break;
+                    }
+                } //else { Assert(!, "unreachable"); }
+                break;
+
+            case ST_F5:
+                if (j!=0)
+                {
+                    Roulette<int,RealT> roulette(*die);
+
+                    // compute F5[j-1] + ScoreExternalUnpaired()
+                    if (allow_unpaired_position[j])
+                    {
+                        roulette.add(EncodeTraceback(TB_F5_UNPAIRED,0),
+                                     F5i_ess[j-1] + ScoreExternalUnpairedEvidence(j));
+                    }
+        
+                    // compute SUM (0<=k<j : F5[k] + FC[k+1,j-1] + ScoreExternalPaired() + ScoreBP(k+1,j) + ScoreJunctionA(j,k))
+                    int l = 0; // ed remove max bp dist
+                    for (int k = l; k < j; k++)
+                    {
+                        if (allow_paired[offset[k+1]+j])
+                        {
+                            RealT value = F5i_ess[k] + FCi_ess[offset[k+1]+j-1] + ScoreExternalPaired() +
+                                ScoreBasePairEvidence(k+1,j) + ScoreJunctionA(j,k);
+                            roulette.add(EncodeTraceback(TB_F5_BIFURCATION,k), value);
+                        }      
+                    }
+
+                    // choose
+                    std::pair<int,int> traceback = DecodeTraceback(roulette.choose());
+                    switch (traceback.first)
+                    {
+                        case TB_F5_ZERO:
+                            break;
+                        case TB_F5_UNPAIRED:
+                        {
+                            traceback_queue.push(make_triple(int(ST_F5), 0, j-1));
+                        }
+                        break;
+                        case TB_F5_BIFURCATION:
+                        {
+                            const int k = traceback.second;
+                            solution[k+1] = j;
+                            solution[j] = k+1;
+                            traceback_queue.push(make_triple(int(ST_F5), 0, k));
+                            traceback_queue.push(make_triple(int(ST_FC), k+1, j-1));
+                        }
+                        break;
+                    }
+                }
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    return solution;
+}
+
 
