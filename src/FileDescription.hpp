@@ -23,9 +23,9 @@ struct FileDescription
     double weight;
     
     // constructors, assignment operator, destructor
-    FileDescription(const std::string &input_filename,
-                    const bool allow_noncomplementary,
-                    const int num_data_sources);
+    FileDescription(const std::string &input_filename="",
+                    const bool allow_noncomplementary=false,
+                    const int num_data_sources=0);
     FileDescription(const FileDescription &rhs);
     FileDescription &operator=(const FileDescription &rhs);
     ~FileDescription();

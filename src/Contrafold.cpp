@@ -8,6 +8,7 @@
 #endif
 #include "Config.hpp"
 #include "Options.hpp"
+#include "Utilities.ipp"
 #include "Utilities.hpp"
 #include "ComputationWrapper.hpp"
 #include "FileDescription.hpp"
@@ -32,30 +33,23 @@ void Version();
 void ParseArguments(int argc, char **argv, Options &options, std::vector<std::string> &filenames);
 void MakeFileDescriptions(const Options &options, const std::vector<std::string> &filenames, std::vector<FileDescription> &descriptions);
 
-template<class RealT>
 void RunGradientSanityCheck(const Options &options, const std::vector<FileDescription> &descriptions);
 
-template<class RealT>
 void RunEnergyTest(const Options &options, const std::vector<FileDescription> &descriptions);
 
-template<class RealT>
 void RunTrainingMode(const Options &options, const std::vector<FileDescription> &descriptions);
 
-template<class RealT>
 void RunPredictionMode(const Options &options, const std::vector<FileDescription> &descriptions);
 
-template<class RealT>
 void RunSampleMode(const Options &options, const std::vector<FileDescription> &descriptions);
 
-template<class RealT>
 void RunREVIMode(const Options &options, const std::vector<FileDescription> &descriptions);
 
 
-template<class RealT>
 void RunPredictionFoldChangeMode(const Options &options, const std::vector<FileDescription> &descriptions);
 
 // default parameters
-#include "Defaults.ipp"
+#include "Defaults.hpp"
 
 /////////////////////////////////////////////////////////////////
 // main()
@@ -95,30 +89,30 @@ int main(int argc, char **argv)
     // perform required task
     if (options.GetBoolValue("gradient_sanity_check"))
     {
-        RunGradientSanityCheck<double>(options, descriptions);
+        RunGradientSanityCheck(options, descriptions);
     }
     else if (options.GetBoolValue("test_energies"))
     {
-        RunEnergyTest<double>(options, descriptions);
+        RunEnergyTest(options, descriptions);
     }
 
     else if (options.GetStringValue("training_mode") != "")
     {
-        RunTrainingMode<double>(options, descriptions);
+        RunTrainingMode(options, descriptions);
     }
     else if (options.GetBoolValue("run_sample_mode")){
-      RunSampleMode<double>(options, descriptions);
+      RunSampleMode(options, descriptions);
     }
     else if (options.GetBoolValue("run_revi_mode")){
-      RunREVIMode<double>(options, descriptions);
+      RunREVIMode(options, descriptions);
     }
     else if (options.GetStringValue("prediction_mode") == "foldchange")
     {
-        RunPredictionFoldChangeMode<double>(options, descriptions);
+        RunPredictionFoldChangeMode(options, descriptions);
     }
     else
     {
-        RunPredictionMode<float>(options, descriptions);
+        RunPredictionMode(options, descriptions);
     }
     
 #ifdef MULTI
@@ -720,16 +714,15 @@ void MakeFileDescriptions(const Options &options,
 // Print energies for test sequence.
 /////////////////////////////////////////////////////////////////
 
-template<class RealT>
 void RunEnergyTest(const Options &options,
                             const std::vector<FileDescription> &descriptions)
 {
-   ParameterManager<RealT> parameter_manager;
-    InferenceEngine<RealT> inference_engine(options.GetBoolValue("allow_noncomplementary"),
+    ParameterManager parameter_manager;
+    InferenceEngine inference_engine(options.GetBoolValue("allow_noncomplementary"),
         options.GetIntValue("num_data_sources"), options.GetRealValue("kappa"));
     inference_engine.RegisterParameters(parameter_manager);
-    ComputationEngine<RealT> computation_engine(options, descriptions, inference_engine, parameter_manager);
-    ComputationWrapper<RealT> computation_wrapper(computation_engine);
+    ComputationEngine computation_engine(options, descriptions, inference_engine, parameter_manager);
+    ComputationWrapper computation_wrapper(computation_engine);
     
     // decide whether I'm a compute node or master node
     if (computation_engine.IsComputeNode())
@@ -752,12 +745,12 @@ void RunEnergyTest(const Options &options,
     else
     {
 #if PROFILE
-        w = GetDefaultProfileValues<RealT>();
+        w = GetDefaultProfileValues();
 #else
         if (options.GetBoolValue("allow_noncomplementary"))
-            w = GetDefaultNoncomplementaryValues<RealT>();
+            w = GetDefaultNoncomplementaryValues();
         else
-            w = GetDefaultComplementaryValues<RealT>();
+            w = GetDefaultComplementaryValues();
 #endif
     }
 
@@ -774,7 +767,6 @@ void RunEnergyTest(const Options &options,
 // Compute gradient sanity check.
 /////////////////////////////////////////////////////////////////
 
-template<class RealT>
 void RunGradientSanityCheck(const Options &options,
                             const std::vector<FileDescription> &descriptions)
 {
@@ -801,12 +793,12 @@ void RunGradientSanityCheck(const Options &options,
     //                        interface between computation routines
     //                        and optimization routines
     
-    ParameterManager<RealT> parameter_manager;
-    InferenceEngine<RealT> inference_engine(options.GetBoolValue("allow_noncomplementary"),
+    ParameterManager parameter_manager;
+    InferenceEngine inference_engine(options.GetBoolValue("allow_noncomplementary"),
       options.GetIntValue("num_data_sources"), options.GetRealValue("kappa"));
     inference_engine.RegisterParameters(parameter_manager);
-    ComputationEngine<RealT> computation_engine(options, descriptions, inference_engine, parameter_manager);
-    ComputationWrapper<RealT> computation_wrapper(computation_engine);
+    ComputationEngine computation_engine(options, descriptions, inference_engine, parameter_manager);
+    ComputationWrapper computation_wrapper(computation_engine);
 
     // decide whether I'm a compute node or master node
     if (computation_engine.IsComputeNode())
@@ -840,16 +832,15 @@ void RunGradientSanityCheck(const Options &options,
 // Run CONTRAfold in training mode.
 /////////////////////////////////////////////////////////////////
 
-template<class RealT>
 void RunTrainingMode(const Options &options,
                      const std::vector<FileDescription> &descriptions)
 {
-    ParameterManager<RealT> parameter_manager;
-    InferenceEngine<RealT> inference_engine(options.GetBoolValue("allow_noncomplementary"),
+    ParameterManager parameter_manager;
+    InferenceEngine inference_engine(options.GetBoolValue("allow_noncomplementary"),
       options.GetIntValue("num_data_sources"), options.GetRealValue("kappa"));
     inference_engine.RegisterParameters(parameter_manager);
-    ComputationEngine<RealT> computation_engine(options, descriptions, inference_engine, parameter_manager);
-    ComputationWrapper<RealT> computation_wrapper(computation_engine);
+    ComputationEngine computation_engine(options, descriptions, inference_engine, parameter_manager);
+    ComputationWrapper computation_wrapper(computation_engine);
 
 
     // decide whether I'm a compute node or master node
@@ -896,54 +887,53 @@ void RunTrainingMode(const Options &options,
 
     std::vector<int> units = computation_wrapper.FilterNonparsable(computation_wrapper.GetAllUnits());
 
-    OptimizationWrapper<RealT> optimization_wrapper(computation_wrapper);
+    OptimizationWrapper optimization_wrapper(computation_wrapper);
     
     std::vector<RealT> regularization_coefficients;
 
     // decide between using a fixed regularization parameter or
     // using cross-validation to determine regularization parameters
-    if (options.GetRealValue("holdout_ratio") <= 0)
-    {
-      if (options.GetStringValue("opt2_regularization_weights") != ""){
-        // if provided file of regularization weights, read in
-        std::ifstream regfile(options.GetStringValue("opt2_regularization_weights").c_str());
-        if (regfile.fail()) Error("Could not open regfile for reading.");
+    if (options.GetRealValue("holdout_ratio") <= 0) {
+        if (options.GetStringValue("opt2_regularization_weights") != ""){
+            // if provided file of regularization weights, read in
+            std::ifstream regfile(options.GetStringValue("opt2_regularization_weights").c_str());
+            if (regfile.fail()) Error("Could not open regfile for reading.");
 
-    std::string line;
+            std::string line;
 
-    while (std::getline(regfile, line))
-    {
-        float value;
-        std::stringstream ss(line);
+            while (std::getline(regfile, line))
+            {
+                float value;
+                std::stringstream ss(line);
 
-        while (ss >> value)
-        {
-            regularization_coefficients.push_back(value);
+                while (ss >> value)
+                {
+                    regularization_coefficients.push_back(value);
+                }
+            }
+
+            //TODO: write check that length log_C = NumParameterGroups
+
+        } else {
+            std::cout << "no opt2_regularization_weights file, setting all to be same" << std::endl;
+            //regularization_coefficients(parameter_manager.GetNumParameterGroups(), options.GetRealValue("regularization_coefficient"));
+
+            for (size_t i = 0; i < parameter_manager.GetNumParameterGroups(); i++)
+                regularization_coefficients.push_back(options.GetRealValue("regularization_coefficient"));
         }
-    }
-
-    //TODO: write check that length log_C = NumParameterGroups
-
-      } else {
-        std::cout << "no opt2_regularization_weights file, setting all to be same" << std::endl;
-        //regularization_coefficients(parameter_manager.GetNumParameterGroups(), options.GetRealValue("regularization_coefficient"));
-
-        for (size_t i = 0; i < parameter_manager.GetNumParameterGroups(); i++)
-          regularization_coefficients.push_back(options.GetRealValue("regularization_coefficient"));
-      }
-          std::cout << "reg coefficients" << regularization_coefficients << std::endl;
+        std::cout << "reg coefficients" << regularization_coefficients << std::endl;
         if (options.GetStringValue("training_mode") == "em") {
             optimization_wrapper.TrainEM(units, w, regularization_coefficients,train_max_iter);
         } else if (options.GetStringValue("training_mode") == "em-sgd") {
-	    // Don't regularize evidence CPD parameters
+        // Don't regularize evidence CPD parameters
             std::cout << parameter_manager.GetNumParameterGroups() << std::endl;
             if (parameter_manager.GetNumParameterGroups() != 2)
                 Error("Using em-sgd with multiple hyperparameters is not supported");
             regularization_coefficients[1] = 0;
             optimization_wrapper.TrainSGD(units, w, regularization_coefficients);
 
-	} else {
-            optimization_wrapper.Train(units, w, w0, regularization_coefficients);
+        } else {
+                optimization_wrapper.Train(units, w, w0, regularization_coefficients);
 
         }
     }
@@ -967,16 +957,15 @@ void RunTrainingMode(const Options &options,
 // Run CONTRAfold in prediction mode.
 /////////////////////////////////////////////////////////////////
 
-template<class RealT>
 void RunPredictionMode(const Options &options,
                        const std::vector<FileDescription> &descriptions)
 {
-    ParameterManager<RealT> parameter_manager;
-    InferenceEngine<RealT> inference_engine(options.GetBoolValue("allow_noncomplementary"),
+    ParameterManager parameter_manager;
+    InferenceEngine inference_engine(options.GetBoolValue("allow_noncomplementary"),
       options.GetIntValue("num_data_sources"), options.GetRealValue("kappa"));
     inference_engine.RegisterParameters(parameter_manager);
-    ComputationEngine<RealT> computation_engine(options, descriptions, inference_engine, parameter_manager);
-    ComputationWrapper<RealT> computation_wrapper(computation_engine);
+    ComputationEngine computation_engine(options, descriptions, inference_engine, parameter_manager);
+    ComputationWrapper computation_wrapper(computation_engine);
     
     // decide whether I'm a compute node or master node
     if (computation_engine.IsComputeNode())
@@ -999,12 +988,12 @@ void RunPredictionMode(const Options &options,
     else
     {
 #if PROFILE
-        w = GetDefaultProfileValues<RealT>();
+        w = GetDefaultProfileValues();
 #else
         if (options.GetBoolValue("allow_noncomplementary"))
-            w = GetDefaultNoncomplementaryValues<RealT>();
+            w = GetDefaultNoncomplementaryValues();
         else
-            w = GetDefaultComplementaryValues<RealT>();
+            w = GetDefaultComplementaryValues();
 #endif
     }
 
@@ -1065,16 +1054,15 @@ void RunPredictionMode(const Options &options,
 // Run CONTRAfold in prediction foldchange mode.
 /////////////////////////////////////////////////////////////////
 
-template<class RealT>
 void RunPredictionFoldChangeMode(const Options &options,
                        const std::vector<FileDescription> &descriptions)
 {
-    ParameterManager<RealT> parameter_manager;
-    InferenceEngine<RealT> inference_engine(options.GetBoolValue("allow_noncomplementary"),
+    ParameterManager parameter_manager;
+    InferenceEngine inference_engine(options.GetBoolValue("allow_noncomplementary"),
       options.GetIntValue("num_data_sources"), options.GetRealValue("kappa"));
     inference_engine.RegisterParameters(parameter_manager);
-    ComputationEngine<RealT> computation_engine(options, descriptions, inference_engine, parameter_manager);
-    ComputationWrapper<RealT> computation_wrapper(computation_engine);
+    ComputationEngine computation_engine(options, descriptions, inference_engine, parameter_manager);
+    ComputationWrapper computation_wrapper(computation_engine);
     //std::cout << "unconditional_score,conditional_score,conditional_score2,conditional_score3,pred_log_kd_no_lig,true_log_kd_no_lig,pred_log_kd_w_lig,true_log_kd_no_lig" << std::endl;   
     // decide whether I'm a compute node or master node
     if (computation_engine.IsComputeNode())
@@ -1102,12 +1090,12 @@ void RunPredictionFoldChangeMode(const Options &options,
     else
     {
 #if PROFILE
-        w = GetDefaultProfileValues<RealT>();
+        w = GetDefaultProfileValues();
 #else
         if (options.GetBoolValue("allow_noncomplementary"))
-            w = GetDefaultNoncomplementaryValues<RealT>();
+            w = GetDefaultNoncomplementaryValues();
         else
-            w = GetDefaultComplementaryValues<RealT>();
+            w = GetDefaultComplementaryValues();
 #endif
     }
     computation_wrapper.PredictFoldChange(computation_wrapper.GetAllUnits(), w, options.GetRealValue("gamma"), options.GetRealValue("log_base"));
@@ -1120,16 +1108,15 @@ void RunPredictionFoldChangeMode(const Options &options,
 // Run CONTRAfold in sample mode.
 /////////////////////////////////////////////////////////////////
 
-template<class RealT>
 void RunSampleMode(const Options &options,
                        const std::vector<FileDescription> &descriptions)
 {
-    ParameterManager<RealT> parameter_manager;
-    InferenceEngine<RealT> inference_engine(options.GetBoolValue("allow_noncomplementary"),
+    ParameterManager parameter_manager;
+    InferenceEngine inference_engine(options.GetBoolValue("allow_noncomplementary"),
       options.GetIntValue("num_data_sources"), options.GetRealValue("kappa"));
     inference_engine.RegisterParameters(parameter_manager);
-    ComputationEngine<RealT> computation_engine(options, descriptions, inference_engine, parameter_manager);
-    ComputationWrapper<RealT> computation_wrapper(computation_engine);
+    ComputationEngine computation_engine(options, descriptions, inference_engine, parameter_manager);
+    ComputationWrapper computation_wrapper(computation_engine);
     
     // decide whether I'm a compute node or master node
     if (computation_engine.IsComputeNode())
@@ -1152,12 +1139,12 @@ void RunSampleMode(const Options &options,
     else
     {
 #if PROFILE
-        w = GetDefaultProfileValues<RealT>();
+        w = GetDefaultProfileValues();
 #else
         if (options.GetBoolValue("allow_noncomplementary"))
-            w = GetDefaultNoncomplementaryValues<RealT>();
+            w = GetDefaultNoncomplementaryValues();
         else
-            w = GetDefaultComplementaryValues<RealT>();
+            w = GetDefaultComplementaryValues();
 #endif
     }
 
@@ -1173,15 +1160,14 @@ void RunSampleMode(const Options &options,
 // Run REVI.
 /////////////////////////////////////////////////////////////////
 
-template<class RealT>
 void RunREVIMode(const Options &options,
                        const std::vector<FileDescription> &descriptions)
 {
-    ParameterManager<RealT> parameter_manager;
-    InferenceEngine<RealT> inference_engine(options.GetBoolValue("allow_noncomplementary"),options.GetIntValue("num_data_sources"), options.GetRealValue("kappa"));
+    ParameterManager parameter_manager;
+    InferenceEngine inference_engine(options.GetBoolValue("allow_noncomplementary"),options.GetIntValue("num_data_sources"), options.GetRealValue("kappa"));
     inference_engine.RegisterParameters(parameter_manager);
-    ComputationEngine<RealT> computation_engine(options, descriptions, inference_engine, parameter_manager);
-    ComputationWrapper<RealT> computation_wrapper(computation_engine);
+    ComputationEngine computation_engine(options, descriptions, inference_engine, parameter_manager);
+    ComputationWrapper computation_wrapper(computation_engine);
     
     // decide whether I'm a compute node or master node
     if (computation_engine.IsComputeNode())
@@ -1200,12 +1186,12 @@ void RunREVIMode(const Options &options,
     else
     {
 #if PROFILE
-        w = GetDefaultProfileValues<RealT>();
+        w = GetDefaultProfileValues();
 #else
         if (options.GetBoolValue("allow_noncomplementary"))
-            w = GetDefaultNoncomplementaryValues<RealT>();
+            w = GetDefaultNoncomplementaryValues();
         else
-            w = GetDefaultComplementaryValues<RealT>();
+            w = GetDefaultComplementaryValues();
 #endif
     }
 

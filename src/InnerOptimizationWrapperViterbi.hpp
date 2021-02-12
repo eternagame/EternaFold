@@ -7,16 +7,16 @@
 #ifndef INNEROPTIMIZATIONWRAPPERVITERBI_HPP
 #define INNEROPTIMIZATIONWRAPPERVITERBI_HPP
 
-#include "Computation.hpp"
-#include "OptimizationWrapper.hpp"
-#include "InnerOptimizationWrapperViterbi.hpp"
-#include "SubgradientDescent.hpp"
+#include <Computation.hpp>
+#include <OptimizationWrapper.hpp>
+#include <InnerOptimizationWrapperViterbi.hpp>
+#include <SubgradientDescent.hpp>
 
 //////////////////////////////////////////////////////////////////////
 // class InnerOptimizationWrapperViterbi
 //////////////////////////////////////////////////////////////////////
 
-template<class RealT>
+
 class InnerOptimizationWrapperViterbi : public SubgradientDescent<double>
 {
     OptimizationWrapper *optimizer;
@@ -38,7 +38,5 @@ public:
                 double norm_bound, double step_size);
     void Report(const std::string &s);
 };
-
-#include "InnerOptimizationWrapperViterbi.ipp"
 
 #endif

@@ -31,20 +31,20 @@ index 4166df6..68d656c 100644
  
  struct NonSharedInfo
 @@ -125,6 +130,9 @@ public:
-     void ComputeGammaMLEFunctionAndGradient(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared, bool need_gradient);
-     void ComputeHessianVectorProduct(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared);
-     void Predict(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared);
-+    void Sample(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared);
-+    void RunREVI(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared);
-+    void TestEnergies(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared);
-     void CheckZerosInData(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared);
-     void ComputeGammaMLEScalingFactor(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared);
-     void ComputeFunctionAndGradientSE(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared, bool need_gradient);
+     void ComputeGammaMLEFunctionAndGradient(std::vector<RealT> &result, const SharedInfo &shared, const NonSharedInfo &nonshared, bool need_gradient);
+     void ComputeHessianVectorProduct(std::vector<RealT> &result, const SharedInfo &shared, const NonSharedInfo &nonshared);
+     void Predict(std::vector<RealT> &result, const SharedInfo &shared, const NonSharedInfo &nonshared);
++    void Sample(std::vector<RealT> &result, const SharedInfo &shared, const NonSharedInfo &nonshared);
++    void RunREVI(std::vector<RealT> &result, const SharedInfo &shared, const NonSharedInfo &nonshared);
++    void TestEnergies(std::vector<RealT> &result, const SharedInfo &shared, const NonSharedInfo &nonshared);
+     void CheckZerosInData(std::vector<RealT> &result, const SharedInfo &shared, const NonSharedInfo &nonshared);
+     void ComputeGammaMLEScalingFactor(std::vector<RealT> &result, const SharedInfo &shared, const NonSharedInfo &nonshared);
+     void ComputeFunctionAndGradientSE(std::vector<RealT> &result, const SharedInfo &shared, const NonSharedInfo &nonshared, bool need_gradient);
 diff --git a/Users/hwayment/das/software/cse_versions/cse-clean/src/ComputationEngine.ipp b/./ComputationEngine.ipp
 index 742d4c0..6903662 100644
 --- a/Users/hwayment/das/software/cse_versions/cse-clean/src/ComputationEngine.ipp
 +++ b/./ComputationEngine.ipp
-@@ -89,6 +89,15 @@ void ComputationEngine<RealT>::DoComputation(std::vector<RealT> &result,
+@@ -89,6 +89,15 @@ void ComputationEngine::DoComputation(std::vector<RealT> &result,
          case PREDICT:
              Predict(result, shared, nonshared);
              break;
@@ -60,7 +60,7 @@ index 742d4c0..6903662 100644
          default: 
              Assert(false, "Unknown command type.");
              break;
-@@ -1043,7 +1052,7 @@ void ComputationEngine<RealT>::ComputeFunctionAndGradientSE(std::vector<RealT> &
+@@ -1043,7 +1052,7 @@ void ComputationEngine::ComputeFunctionAndGradientSE(std::vector<RealT> &
                  }
  
                  int index_k = parameter_manager.GetLogicalIndex(
@@ -69,7 +69,7 @@ index 742d4c0..6903662 100644
                  int index_theta = parameter_manager.GetLogicalIndex(
                      inference_engine.GetLogScoreEvidence(1, i, j, dataset_id));
  
-@@ -1210,6 +1219,268 @@ void ComputationEngine<RealT>::ComputeHessianVectorProduct(std::vector<RealT> &r
+@@ -1210,6 +1219,268 @@ void ComputationEngine::ComputeHessianVectorProduct(std::vector<RealT> &r
      
      result = (result - result2) / (RealT(2) * EPSILON);
  }
@@ -79,9 +79,9 @@ index 742d4c0..6903662 100644
 +// Print energies for a single sequence.
 +//////////////////////////////////////////////////////////////////////
 +
-+template<class RealT>
-+void ComputationEngine<RealT>::TestEnergies(std::vector<RealT> &result, 
-+                                       const SharedInfo<RealT> &shared,
++template
++void ComputationEngine::TestEnergies(std::vector<RealT> &result, 
++                                       const SharedInfo &shared,
 +                                       const NonSharedInfo &nonshared)
 +{
 +    result.clear();
@@ -126,9 +126,9 @@ index 742d4c0..6903662 100644
 +//
 +//////////////////////////////////////////////////////////////////////
 +
-+template<class RealT>
-+void ComputationEngine<RealT>::RunREVI(std::vector<RealT> &result, 
-+                                       const SharedInfo<RealT> &shared,
++template
++void ComputationEngine::RunREVI(std::vector<RealT> &result, 
++                                       const SharedInfo &shared,
 +                                       const NonSharedInfo &nonshared)
 +{
 +    result.clear();
@@ -338,7 +338,7 @@ index 742d4c0..6903662 100644
  
  //////////////////////////////////////////////////////////////////////
  // ComputationEngine::Predict()
-@@ -1244,6 +1515,8 @@ void ComputationEngine<RealT>::Predict(std::vector<RealT> &result,
+@@ -1244,6 +1515,8 @@ void ComputationEngine::Predict(std::vector<RealT> &result,
          // Basically, add a ComputeViterbiESS and then call it to support this.
  
          inference_engine.ComputeViterbi();
@@ -347,7 +347,7 @@ index 742d4c0..6903662 100644
          if (options.GetBoolValue("partition_function_only"))
          {
              std::cout << "Viterbi score for \"" << descriptions[nonshared.index].input_filename << "\": " 
-@@ -1344,6 +1617,66 @@ void ComputationEngine<RealT>::Predict(std::vector<RealT> &result,
+@@ -1344,6 +1617,66 @@ void ComputationEngine::Predict(std::vector<RealT> &result,
      
      delete solution;
  }
@@ -357,9 +357,9 @@ index 742d4c0..6903662 100644
 +// Sample structures from predicted ensemble.
 +//////////////////////////////////////////////////////////////////////
 +
-+template<class RealT>
-+void ComputationEngine<RealT>::Sample(std::vector<RealT> &result, 
-+                                       const SharedInfo<RealT> &shared,
++template
++void ComputationEngine::Sample(std::vector<RealT> &result, 
++                                       const SharedInfo &shared,
 +                                       const NonSharedInfo &nonshared)
 +{
 +    result.clear();
@@ -439,7 +439,7 @@ diff --git a/Users/hwayment/das/software/cse_versions/cse-clean/src/ComputationW
 index 4a1fa43..f6d803b 100644
 --- a/Users/hwayment/das/software/cse_versions/cse-clean/src/ComputationWrapper.ipp
 +++ b/./ComputationWrapper.ipp
-@@ -888,6 +888,118 @@ void ComputationWrapper<RealT>::Predict(const std::vector<int> &units,
+@@ -888,6 +888,118 @@ void ComputationWrapper::Predict(const std::vector<int> &units,
      computation_engine.DistributeComputation(ret, shared_info, nonshared_info);
  }
  
@@ -449,8 +449,8 @@ index 4a1fa43..f6d803b 100644
 +// Run sampling algorithm on each of the work units.
 +//////////////////////////////////////////////////////////////////////
 +
-+template<class RealT>
-+void ComputationWrapper<RealT>::Sample(const std::vector<int> &units,
++template
++void ComputationWrapper::Sample(const std::vector<int> &units,
 +                                        const std::vector<RealT> &w,
 +                                        RealT gamma,
 +                                        RealT log_base)
@@ -487,8 +487,8 @@ index 4a1fa43..f6d803b 100644
 +// Run REVI on each of the work units.
 +//////////////////////////////////////////////////////////////////////
 +
-+template<class RealT>
-+void ComputationWrapper<RealT>::RunREVI(const std::vector<int> &units,
++template
++void ComputationWrapper::RunREVI(const std::vector<int> &units,
 +                                        const std::vector<RealT> &w,
 +                                        RealT gamma,
 +                                        RealT log_base,
@@ -527,8 +527,8 @@ index 4a1fa43..f6d803b 100644
 +// Run energy test.
 +//////////////////////////////////////////////////////////////////////
 +
-+template<class RealT>
-+void ComputationWrapper<RealT>::TestEnergies(const std::vector<int> &units,
++template
++void ComputationWrapper::TestEnergies(const std::vector<int> &units,
 +                                        const std::vector<RealT> &w,
 +                                        RealT gamma,
 +                                        RealT log_base)
@@ -595,22 +595,22 @@ index 992cf78..b574b23 100644
  const int TRAIN_MAX_ITER_DEFAULT = 1000;
  const double HYPERPARAM_DATA_DEFAULT = 1;
 @@ -30,12 +32,21 @@ void MakeFileDescriptions(const Options &options, const std::vector<std::string>
- template<class RealT>
+ template
  void RunGradientSanityCheck(const Options &options, const std::vector<FileDescription> &descriptions);
  
-+template<class RealT>
++template
 +void RunEnergyTest(const Options &options, const std::vector<FileDescription> &descriptions);
 +
- template<class RealT>
+ template
  void RunTrainingMode(const Options &options, const std::vector<FileDescription> &descriptions);
  
- template<class RealT>
+ template
  void RunPredictionMode(const Options &options, const std::vector<FileDescription> &descriptions);
  
-+template<class RealT>
++template
 +void RunSampleMode(const Options &options, const std::vector<FileDescription> &descriptions);
 +
-+template<class RealT>
++template
 +void RunREVIMode(const Options &options, const std::vector<FileDescription> &descriptions);
 +
  // default parameters
@@ -618,21 +618,21 @@ index 992cf78..b574b23 100644
  
 @@ -70,10 +81,20 @@ int main(int argc, char **argv)
      {
-         RunGradientSanityCheck<double>(options, descriptions);
+         RunGradientSanityCheck(options, descriptions);
      }
 +    else if (options.GetBoolValue("test_energies"))
 +    {
-+        RunEnergyTest<double>(options, descriptions);
++        RunEnergyTest(options, descriptions);
 +    }
      else if (options.GetStringValue("training_mode") != "")
      {
-         RunTrainingMode<double>(options, descriptions);
+         RunTrainingMode(options, descriptions);
      }
 +    else if (options.GetBoolValue("run_sample_mode")){
-+        RunSampleMode<double>(options, descriptions);
++        RunSampleMode(options, descriptions);
 +    }
 +    else if (options.GetBoolValue("run_revi_mode")){
-+        RunREVIMode<double>(options, descriptions);
++        RunREVIMode(options, descriptions);
 +    }
      else
      {
@@ -778,7 +778,7 @@ index 992cf78..b574b23 100644
 +// Print energies for test sequence.
 +/////////////////////////////////////////////////////////////////
 +
-+template<class RealT>
++template
 +void RunEnergyTest(const Options &options,
 +                            const std::vector<FileDescription> &descriptions)
 +{
@@ -805,12 +805,12 @@ index 992cf78..b574b23 100644
 +    //                        interface between computation routines
 +    //                        and optimization routines
 +    
-+   ParameterManager<RealT> parameter_manager;
-+    InferenceEngine<RealT> inference_engine(options.GetBoolValue("allow_noncomplementary"),
++   ParameterManager parameter_manager;
++    InferenceEngine inference_engine(options.GetBoolValue("allow_noncomplementary"),
 +        options.GetIntValue("num_data_sources"), options.GetRealValue("kappa"));
 +    inference_engine.RegisterParameters(parameter_manager);
-+    ComputationEngine<RealT> computation_engine(options, descriptions, inference_engine, parameter_manager);
-+    ComputationWrapper<RealT> computation_wrapper(computation_engine);
++    ComputationEngine computation_engine(options, descriptions, inference_engine, parameter_manager);
++    ComputationWrapper computation_wrapper(computation_engine);
 +    
 +    // decide whether I'm a compute node or master node
 +    if (computation_engine.IsComputeNode())
@@ -855,31 +855,31 @@ index 992cf78..b574b23 100644
 @@ -572,7 +722,8 @@ void RunGradientSanityCheck(const Options &options,
      //                        and optimization routines
      
-     ParameterManager<RealT> parameter_manager;
--    InferenceEngine<RealT> inference_engine(options.GetBoolValue("allow_noncomplementary"),options.GetIntValue("num_data_sources"));
-+    InferenceEngine<RealT> inference_engine(options.GetBoolValue("allow_noncomplementary"),
+     ParameterManager parameter_manager;
+-    InferenceEngine inference_engine(options.GetBoolValue("allow_noncomplementary"),options.GetIntValue("num_data_sources"));
++    InferenceEngine inference_engine(options.GetBoolValue("allow_noncomplementary"),
 +        options.GetIntValue("num_data_sources"), options.GetRealValue("kappa"));
      inference_engine.RegisterParameters(parameter_manager);
-     ComputationEngine<RealT> computation_engine(options, descriptions, inference_engine, parameter_manager);
-     ComputationWrapper<RealT> computation_wrapper(computation_engine);
+     ComputationEngine computation_engine(options, descriptions, inference_engine, parameter_manager);
+     ComputationWrapper computation_wrapper(computation_engine);
 @@ -614,7 +765,7 @@ void RunTrainingMode(const Options &options,
                       const std::vector<FileDescription> &descriptions)
  {
-     ParameterManager<RealT> parameter_manager;
--    InferenceEngine<RealT> inference_engine(options.GetBoolValue("allow_noncomplementary"),options.GetIntValue("num_data_sources"));
-+    InferenceEngine<RealT> inference_engine(options.GetBoolValue("allow_noncomplementary"),options.GetIntValue("num_data_sources"), options.GetRealValue("kappa"));
+     ParameterManager parameter_manager;
+-    InferenceEngine inference_engine(options.GetBoolValue("allow_noncomplementary"),options.GetIntValue("num_data_sources"));
++    InferenceEngine inference_engine(options.GetBoolValue("allow_noncomplementary"),options.GetIntValue("num_data_sources"), options.GetRealValue("kappa"));
      inference_engine.RegisterParameters(parameter_manager);
-     ComputationEngine<RealT> computation_engine(options, descriptions, inference_engine, parameter_manager);
-     ComputationWrapper<RealT> computation_wrapper(computation_engine);
+     ComputationEngine computation_engine(options, descriptions, inference_engine, parameter_manager);
+     ComputationWrapper computation_wrapper(computation_engine);
 @@ -708,7 +859,7 @@ void RunPredictionMode(const Options &options,
                         const std::vector<FileDescription> &descriptions)
  {
-     ParameterManager<RealT> parameter_manager;
--    InferenceEngine<RealT> inference_engine(options.GetBoolValue("allow_noncomplementary"),options.GetIntValue("num_data_sources"));
-+    InferenceEngine<RealT> inference_engine(options.GetBoolValue("allow_noncomplementary"),options.GetIntValue("num_data_sources"), options.GetRealValue("kappa"));
+     ParameterManager parameter_manager;
+-    InferenceEngine inference_engine(options.GetBoolValue("allow_noncomplementary"),options.GetIntValue("num_data_sources"));
++    InferenceEngine inference_engine(options.GetBoolValue("allow_noncomplementary"),options.GetIntValue("num_data_sources"), options.GetRealValue("kappa"));
      inference_engine.RegisterParameters(parameter_manager);
-     ComputationEngine<RealT> computation_engine(options, descriptions, inference_engine, parameter_manager);
-     ComputationWrapper<RealT> computation_wrapper(computation_engine);
+     ComputationEngine computation_engine(options, descriptions, inference_engine, parameter_manager);
+     ComputationWrapper computation_wrapper(computation_engine);
 @@ -793,3 +944,102 @@ void RunPredictionMode(const Options &options,
      }
      computation_engine.StopComputeNodes();
@@ -891,15 +891,15 @@ index 992cf78..b574b23 100644
 +// Run CONTRAfold in sample mode.
 +/////////////////////////////////////////////////////////////////
 +
-+template<class RealT>
++template
 +void RunSampleMode(const Options &options,
 +                       const std::vector<FileDescription> &descriptions)
 +{
-+    ParameterManager<RealT> parameter_manager;
-+    InferenceEngine<RealT> inference_engine(options.GetBoolValue("allow_noncomplementary"),options.GetIntValue("num_data_sources"), options.GetRealValue("kappa"));
++    ParameterManager parameter_manager;
++    InferenceEngine inference_engine(options.GetBoolValue("allow_noncomplementary"),options.GetIntValue("num_data_sources"), options.GetRealValue("kappa"));
 +    inference_engine.RegisterParameters(parameter_manager);
-+    ComputationEngine<RealT> computation_engine(options, descriptions, inference_engine, parameter_manager);
-+    ComputationWrapper<RealT> computation_wrapper(computation_engine);
++    ComputationEngine computation_engine(options, descriptions, inference_engine, parameter_manager);
++    ComputationWrapper computation_wrapper(computation_engine);
 +    
 +    // decide whether I'm a compute node or master node
 +    if (computation_engine.IsComputeNode())
@@ -943,15 +943,15 @@ index 992cf78..b574b23 100644
 +// Run REVI.
 +/////////////////////////////////////////////////////////////////
 +
-+template<class RealT>
++template
 +void RunREVIMode(const Options &options,
 +                       const std::vector<FileDescription> &descriptions)
 +{
-+    ParameterManager<RealT> parameter_manager;
-+    InferenceEngine<RealT> inference_engine(options.GetBoolValue("allow_noncomplementary"),options.GetIntValue("num_data_sources"), options.GetRealValue("kappa"));
++    ParameterManager parameter_manager;
++    InferenceEngine inference_engine(options.GetBoolValue("allow_noncomplementary"),options.GetIntValue("num_data_sources"), options.GetRealValue("kappa"));
 +    inference_engine.RegisterParameters(parameter_manager);
-+    ComputationEngine<RealT> computation_engine(options, descriptions, inference_engine, parameter_manager);
-+    ComputationWrapper<RealT> computation_wrapper(computation_engine);
++    ComputationEngine computation_engine(options, descriptions, inference_engine, parameter_manager);
++    ComputationWrapper computation_wrapper(computation_engine);
 +    
 +    // decide whether I'm a compute node or master node
 +    if (computation_engine.IsComputeNode())
@@ -1008,7 +1008,7 @@ index 4818ec2..1f0295d 100644
      unsigned char char_mapping[256];
      int is_complementary[M+1][M+1];
      bool cache_initialized;
-     ParameterManager<RealT> *parameter_manager;
+     ParameterManager *parameter_manager;
 -    
 +    Die* die;
 +
@@ -1067,7 +1067,7 @@ diff --git a/Users/hwayment/das/software/cse_versions/cse-clean/src/InferenceEng
 index def37bb..a32fb22 100644
 --- a/Users/hwayment/das/software/cse_versions/cse-clean/src/InferenceEngine.ipp
 +++ b/./InferenceEngine.ipp
-@@ -42,7 +42,7 @@ RealT InferenceEngine<RealT>::ScoreUnpairedPositionEvidence(int i) const
+@@ -42,7 +42,7 @@ RealT InferenceEngine::ScoreUnpairedPositionEvidence(int i) const
  {
     RealT sum = 0;
     for (int n = 0; n < num_data_sources; n++)
@@ -1076,7 +1076,7 @@ index def37bb..a32fb22 100644
     return sum;
  }
  #else
-@@ -59,7 +59,7 @@ RealT InferenceEngine<RealT>::ScorePairedPositionEvidence(int i) const
+@@ -59,7 +59,7 @@ RealT InferenceEngine::ScorePairedPositionEvidence(int i) const
  {
     RealT sum = 0;
     for (int n = 0; n < num_data_sources; n++)
@@ -1085,12 +1085,12 @@ index def37bb..a32fb22 100644
     return sum;
  }
  #else
-@@ -307,11 +307,12 @@ bool InferenceEngine<RealT>::IsComplementary(int i, int j) const
+@@ -307,11 +307,12 @@ bool InferenceEngine::IsComplementary(int i, int j) const
  //////////////////////////////////////////////////////////////////////
  
- template<class RealT>
--InferenceEngine<RealT>::InferenceEngine(bool allow_noncomplementary, const int num_data_sources) :
-+InferenceEngine<RealT>::InferenceEngine(bool allow_noncomplementary, const int num_data_sources, const double kappa) :
+ template
+-InferenceEngine::InferenceEngine(bool allow_noncomplementary, const int num_data_sources) :
++InferenceEngine::InferenceEngine(bool allow_noncomplementary, const int num_data_sources, const double kappa) :
      allow_noncomplementary(allow_noncomplementary),
      cache_initialized(false),
      parameter_manager(NULL),
@@ -1099,12 +1099,12 @@ index def37bb..a32fb22 100644
      L(0),
      SIZE(0)
  #if PROFILE
-@@ -946,6 +947,79 @@ double InferenceEngine<RealT>::LogGammaProb(RealT data, int which_data, int isUn
+@@ -946,6 +947,79 @@ double InferenceEngine::LogGammaProb(RealT data, int which_data, int isUn
      return (k-1)*log(data) - data/theta - lgamma(k) - k*log(theta);
  }
  
-+template<class RealT>
-+void InferenceEngine<RealT>::UpdateREVIVec(std::vector<RealT> perturb_unpaired, std::vector<RealT> perturb_paired)
++template
++void InferenceEngine::UpdateREVIVec(std::vector<RealT> perturb_unpaired, std::vector<RealT> perturb_paired)
 +{
 +    int which_data = 0; // update if we ever want to do more than one
 +
@@ -1119,20 +1119,20 @@ index def37bb..a32fb22 100644
 +
 +}
 +
-+template<class RealT>
-+std::vector<std::vector<double> > InferenceEngine<RealT>::GetREVIvec_up()
++template
++std::vector<std::vector<double> > InferenceEngine::GetREVIvec_up()
 +{
 +    return score_unpaired_position;
 +}
 +
-+template<class RealT>
-+std::vector<std::vector<double> > InferenceEngine<RealT>::GetREVIvec_pr()
++template
++std::vector<std::vector<double> > InferenceEngine::GetREVIvec_pr()
 +{
 +    return score_paired_position;
 +}
 +
-+template<class RealT>
-+std::vector<RealT> InferenceEngine<RealT>::GetREVIError(std::vector<RealT> p_i)
++template
++std::vector<RealT> InferenceEngine::GetREVIError(std::vector<RealT> p_i)
 +{
 +    int which_data = 0;
 +    std::vector<RealT> error;
@@ -1179,7 +1179,7 @@ index def37bb..a32fb22 100644
  
  //////////////////////////////////////////////////////////////////////
  // InferenceEngine::LoadSequence()
-@@ -966,7 +1040,6 @@ void InferenceEngine<RealT>::LoadSequence(const SStruct &sstruct)
+@@ -966,7 +1040,6 @@ void InferenceEngine::LoadSequence(const SStruct &sstruct)
      SIZE2 = (L+1)*(L+1);
  #endif
  
@@ -1187,15 +1187,15 @@ index def37bb..a32fb22 100644
      // allocate memory
      s.resize(L+1);
  #if PROFILE
-@@ -1120,8 +1193,23 @@ void InferenceEngine<RealT>::LoadSequence(const SStruct &sstruct)
+@@ -1120,8 +1193,23 @@ void InferenceEngine::LoadSequence(const SStruct &sstruct)
      score_paired_position = 1-sstruct.GetPairedPotentials();  // probability of paired = 1 - probability of unpaired (NOTE: currently PairedPotentials returns the probability of unpaired, so need the "1-" in front
  #endif
  
 +
  }
  
-+template<class RealT>
-+void InferenceEngine<RealT>::InitializeREVIVec()
++template
++void InferenceEngine::InitializeREVIVec()
 +{    
 +    score_unpaired_position[0].clear();
 +    score_paired_position[0].clear();
@@ -1209,9 +1209,9 @@ index def37bb..a32fb22 100644
 +}
 +}
  
- template<class RealT>
- void InferenceEngine<RealT>::UpdateEvidenceStructures()
-@@ -1148,6 +1236,7 @@ void InferenceEngine<RealT>::UpdateEvidenceStructures(int which_data)
+ template
+ void InferenceEngine::UpdateEvidenceStructures()
+@@ -1148,6 +1236,7 @@ void InferenceEngine::UpdateEvidenceStructures(int which_data)
      }
  }
  
@@ -1219,7 +1219,7 @@ index def37bb..a32fb22 100644
  //////////////////////////////////////////////////////////////////////
  // InferenceEngine::InitializeCache()
  //
-@@ -3929,9 +4018,8 @@ std::vector<RealT> InferenceEngine<RealT>::ComputeViterbiFeatureCounts()
+@@ -3929,9 +4018,8 @@ std::vector<RealT> InferenceEngine::ComputeViterbiFeatureCounts()
  {
      std::queue<triple<int *,int,int> > traceback_queue;
      traceback_queue.push(make_triple(&F5t[0], 0, L));
@@ -1230,7 +1230,7 @@ index def37bb..a32fb22 100644
      while (!traceback_queue.empty())
      {
          triple<int *,int,int> t = traceback_queue.front();
-@@ -3947,6 +4035,7 @@ std::vector<RealT> InferenceEngine<RealT>::ComputeViterbiFeatureCounts()
+@@ -3947,6 +4035,7 @@ std::vector<RealT> InferenceEngine::ComputeViterbiFeatureCounts()
          
          switch (traceback.first)
          {
@@ -1238,7 +1238,7 @@ index def37bb..a32fb22 100644
  #if PARAMS_HELIX_LENGTH || PARAMS_ISOLATED_BASE_PAIR
              case TB_FN_HAIRPIN: 
                  CountHairpin(i,j,RealT(1));
-@@ -3956,6 +4045,7 @@ std::vector<RealT> InferenceEngine<RealT>::ComputeViterbiFeatureCounts()
+@@ -3956,6 +4045,7 @@ std::vector<RealT> InferenceEngine::ComputeViterbiFeatureCounts()
                  const int p = i + traceback.second / (C_MAX_SINGLE_LENGTH+1);
                  const int q = j - traceback.second % (C_MAX_SINGLE_LENGTH+1);
                  CountSingle(i,j,p,q,RealT(1));
@@ -1246,7 +1246,7 @@ index def37bb..a32fb22 100644
                  traceback_queue.push(make_triple(&FCt[0], p+1, q-1));
              }
              break;
-@@ -3965,6 +4055,7 @@ std::vector<RealT> InferenceEngine<RealT>::ComputeViterbiFeatureCounts()
+@@ -3965,6 +4055,7 @@ std::vector<RealT> InferenceEngine::ComputeViterbiFeatureCounts()
                  CountJunctionA(i,j,RealT(1));
                  CountMultiPaired(RealT(1));
                  CountMultiBase(RealT(1));
@@ -1254,7 +1254,7 @@ index def37bb..a32fb22 100644
                  traceback_queue.push(make_triple(&FM1t[0], i, k));
                  traceback_queue.push(make_triple(&FMt[0], k, j));
              }
-@@ -3973,6 +4064,7 @@ std::vector<RealT> InferenceEngine<RealT>::ComputeViterbiFeatureCounts()
+@@ -3973,6 +4064,7 @@ std::vector<RealT> InferenceEngine::ComputeViterbiFeatureCounts()
              {
                  CountBasePair(i+1,j,RealT(1));
                  CountHelixStacking(i,j+1,RealT(1));
@@ -1262,7 +1262,7 @@ index def37bb..a32fb22 100644
                  traceback_queue.push(make_triple(&FEt[0], i+1, j-1));
              }
              break;
-@@ -4001,9 +4093,11 @@ std::vector<RealT> InferenceEngine<RealT>::ComputeViterbiFeatureCounts()
+@@ -4001,9 +4093,11 @@ std::vector<RealT> InferenceEngine::ComputeViterbiFeatureCounts()
                  traceback_queue.push(make_triple(&FEt[0], i+m-1, j-m+1));
              }
              break;
@@ -1274,7 +1274,7 @@ index def37bb..a32fb22 100644
                  break;
              case TB_FC_SINGLE: 
              {
-@@ -4018,6 +4112,7 @@ std::vector<RealT> InferenceEngine<RealT>::ComputeViterbiFeatureCounts()
+@@ -4018,6 +4112,7 @@ std::vector<RealT> InferenceEngine::ComputeViterbiFeatureCounts()
                  else
                  {
                      CountSingle(i,j,p,q,RealT(1));
@@ -1282,7 +1282,7 @@ index def37bb..a32fb22 100644
                  }
                  
                  traceback_queue.push(make_triple(&FCt[0], p+1, q-1));
-@@ -4029,6 +4124,7 @@ std::vector<RealT> InferenceEngine<RealT>::ComputeViterbiFeatureCounts()
+@@ -4029,6 +4124,7 @@ std::vector<RealT> InferenceEngine::ComputeViterbiFeatureCounts()
                  CountJunctionA(i,j,RealT(1));
                  CountMultiPaired(RealT(1));
                  CountMultiBase(RealT(1));
@@ -1290,7 +1290,7 @@ index def37bb..a32fb22 100644
                  traceback_queue.push(make_triple(&FM1t[0], i, k));
                  traceback_queue.push(make_triple(&FMt[0], k, j));
              }
-@@ -4039,12 +4135,14 @@ std::vector<RealT> InferenceEngine<RealT>::ComputeViterbiFeatureCounts()
+@@ -4039,12 +4135,14 @@ std::vector<RealT> InferenceEngine::ComputeViterbiFeatureCounts()
                  CountJunctionA(j,i,RealT(1));
                  CountMultiPaired(RealT(1));
                  CountBasePair(i+1,j,RealT(1));
@@ -1305,7 +1305,7 @@ index def37bb..a32fb22 100644
                  traceback_queue.push(make_triple(&FM1t[0], i+1, j));
              }
              break;
-@@ -4058,6 +4156,7 @@ std::vector<RealT> InferenceEngine<RealT>::ComputeViterbiFeatureCounts()
+@@ -4058,6 +4156,7 @@ std::vector<RealT> InferenceEngine::ComputeViterbiFeatureCounts()
              case TB_FM_UNPAIRED:
              {
                  CountMultiUnpaired(j,RealT(1));
@@ -1313,7 +1313,7 @@ index def37bb..a32fb22 100644
                  traceback_queue.push(make_triple(&FMt[0], i, j-1));
              }
              break;
-@@ -4068,25 +4167,706 @@ std::vector<RealT> InferenceEngine<RealT>::ComputeViterbiFeatureCounts()
+@@ -4068,25 +4167,706 @@ std::vector<RealT> InferenceEngine::ComputeViterbiFeatureCounts()
                  break;
              case TB_F5_UNPAIRED:
                  CountExternalUnpaired(j,RealT(1));
@@ -1347,8 +1347,8 @@ index def37bb..a32fb22 100644
 +// Use feature counts from Viterbi decoding.
 +//////////////////////////////////////////////////////////////////////
 +
-+template<class RealT>
-+void InferenceEngine<RealT>::GetViterbiFeatures()
++template
++void InferenceEngine::GetViterbiFeatures()
 +{
 +    std::queue<triple<int *,int,int> > traceback_queue;
 +    traceback_queue.push(make_triple(&F5t[0], 0, L));
@@ -1686,8 +1686,8 @@ index def37bb..a32fb22 100644
 +// Use feature counts from Viterbi decoding, using evidence-based energies.
 +//////////////////////////////////////////////////////////////////////
 +
-+template<class RealT>
-+void InferenceEngine<RealT>::GetViterbiFeaturesESS()
++template
++void InferenceEngine::GetViterbiFeaturesESS()
 +{
 +    std::queue<triple<int *,int,int> > traceback_queue;
 +    traceback_queue.push(make_triple(&F5t[0], 0, L));
@@ -2025,7 +2025,7 @@ index def37bb..a32fb22 100644
  }
  
  //////////////////////////////////////////////////////////////////////
-@@ -5938,7 +6718,6 @@ void InferenceEngine<RealT>::ComputePosteriorESS()
+@@ -5938,7 +6718,6 @@ void InferenceEngine::ComputePosteriorESS()
      //double starting_time = GetSystemTime();
  
      const RealT Z = ComputeLogPartitionCoefficientESS();
@@ -2033,7 +2033,7 @@ index def37bb..a32fb22 100644
      
      for (int i = L; i >= 0; i--)
      {
-@@ -5992,7 +6771,7 @@ void InferenceEngine<RealT>::ComputePosteriorESS()
+@@ -5992,7 +6771,7 @@ void InferenceEngine::ComputePosteriorESS()
                  
                  if (allow_unpaired[offset[i]+j] && j-i >= C_MIN_HAIRPIN_LENGTH)
                      CountHairpinEvidence(i,j,Fast_Exp(outside + ScoreHairpinEvidence(i,j)));
@@ -2042,7 +2042,7 @@ index def37bb..a32fb22 100644
                  // compute SUM (i<=p<p+2<=q<=j, p-i+j-q>0 : ScoreSingle(i,j,p,q) + FC[p+1,q-1])
                  
  #if !FAST_SINGLE_BRANCH_LOOPS
-@@ -6128,8 +6907,12 @@ void InferenceEngine<RealT>::ComputePosteriorESS()
+@@ -6128,8 +6907,12 @@ void InferenceEngine::ComputePosteriorESS()
                  // compute ScoreHairpin(i,j)
                  
                  if (allow_unpaired[offset[i]+j] && j-i >= C_MIN_HAIRPIN_LENGTH)
@@ -2056,7 +2056,7 @@ index def37bb..a32fb22 100644
                  // compute SUM (i<=p<p+2<=q<=j : ScoreSingle(i,j,p,q) + FC[p+1,q-1])
                  
  #if !FAST_SINGLE_BRANCH_LOOPS
-@@ -7716,8 +8499,8 @@ std::vector<RealT> InferenceEngine<RealT>::ComputeGammaMLESS(std::vector<int> ev
+@@ -7716,8 +8499,8 @@ std::vector<RealT> InferenceEngine::ComputeGammaMLESS(std::vector<int> ev
      RealT sum1 = 0;
      RealT sum2 = 0;
      int N = 0;
@@ -2067,20 +2067,20 @@ index def37bb..a32fb22 100644
  
      double score_up = 0;
  
-@@ -7911,3 +8694,497 @@ int InferenceEngine<RealT>::AreZerosInSeq(int id_base, int which_data)
+@@ -7911,3 +8694,497 @@ int InferenceEngine::AreZerosInSeq(int id_base, int which_data)
      return areZeros;
  }
  
-+template<class RealT>
-+void InferenceEngine<RealT>::InitRand(unsigned int seed)
++template
++void InferenceEngine::InitRand(unsigned int seed)
 +{
 +    if (die) delete die;
 +    die = new Die(seed);
 +}
 +
 +// stochastic traceback algorithm
-+template<class RealT>
-+std::vector<int> InferenceEngine<RealT>::PredictPairingsStochasticTraceback() const
++template
++std::vector<int> InferenceEngine::PredictPairingsStochasticTraceback() const
 +{
 +    enum { ST_FC, ST_F5, ST_FM, ST_FM1, ST_FE, ST_FN };
 +
@@ -2323,8 +2323,8 @@ index def37bb..a32fb22 100644
 +}
 +
 +// stochastic traceback algorithm with chemical mapping data
-+template<class RealT>
-+std::vector<int> InferenceEngine<RealT>::PredictPairingsStochasticTracebackESS() const
++template
++std::vector<int> InferenceEngine::PredictPairingsStochasticTracebackESS() const
 +{
 +    enum { ST_FC, ST_F5, ST_FM, ST_FM1, ST_FE, ST_FN };
 +

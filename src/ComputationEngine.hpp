@@ -29,7 +29,6 @@
 //    values = all parameter values
 //////////////////////////////////////////////////////////////////////
 
-template<class RealT>
 struct SharedInfo
 {
     int command;
@@ -98,13 +97,12 @@ struct NonSharedInfo
 // Wrapper class for DistributedComputation.
 //////////////////////////////////////////////////////////////////////
 
-template<class RealT>
-class ComputationEngine : public DistributedComputation<RealT, SharedInfo<RealT>, NonSharedInfo>
+class ComputationEngine : public DistributedComputation<SharedInfo, NonSharedInfo>
 {
     const Options &options;
-    const std::vector<FileDescription> &descriptions;
-    InferenceEngine<RealT> &inference_engine;
-    ParameterManager<RealT> &parameter_manager;
+    const std::vector<FileDescription> descriptions;
+    InferenceEngine &inference_engine;
+    ParameterManager &parameter_manager;
 
     std::string MakeOutputFilename(const std::string &input_filename,
                                    const std::string &output_destination,
@@ -116,38 +114,42 @@ public:
     // constructor, destructor
     ComputationEngine(const Options &options,
                       const std::vector<FileDescription> &descriptions,
-                      InferenceEngine<RealT> &inference_engine,
-                      ParameterManager<RealT> &parameter_manager);
+                      InferenceEngine &inference_engine,
+                      ParameterManager &parameter_manager);
+
+    // There is no value in using this ctor, but it is necessary for bindings.
+    ComputationEngine(const Options &options,
+                      InferenceEngine &inference_engine,
+                      ParameterManager &parameter_manager);
+
     ~ComputationEngine();
 
     // routine for performing an individual work unit
-    void DoComputation(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared);
+    void DoComputation(std::vector<RealT> &result, const SharedInfo &shared, const NonSharedInfo &nonshared);
 
     // methods to act on individual work units
     void CheckParsability(std::vector<RealT> &result, const NonSharedInfo &nonshared);
-    void ComputeSolutionNormBound(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared);
+    void ComputeSolutionNormBound(std::vector<RealT> &result, const SharedInfo &shared, const NonSharedInfo &nonshared);
     void ComputeGradientNormBound(std::vector<RealT> &result, const NonSharedInfo &nonshared);
-    void ComputeLoss(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared);
-    void ComputeFunctionAndGradient(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared, bool need_gradient);
-    void ComputeMStepFunctionAndGradient(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared, bool need_gradient);
-    void ComputeGammaMLEFunctionAndGradient(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared, bool need_gradient);
-    void ComputeHessianVectorProduct(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared);
-    void Predict(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared);
-    void PredictFoldChange(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared);
-    void Sample(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared);
-    void RunREVI(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared);
-    void TestEnergies(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared);
-    void CheckZerosInData(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared);
-    void ComputeGammaMLEScalingFactor(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared);
-    void ComputeFunctionAndGradientSE(std::vector<RealT> &result, const SharedInfo<RealT> &shared, const NonSharedInfo &nonshared, bool need_gradient);
+    void ComputeLoss(std::vector<RealT> &result, const SharedInfo &shared, const NonSharedInfo &nonshared);
+    void ComputeFunctionAndGradient(std::vector<RealT> &result, const SharedInfo &shared, const NonSharedInfo &nonshared, bool need_gradient);
+    void ComputeMStepFunctionAndGradient(std::vector<RealT> &result, const SharedInfo &shared, const NonSharedInfo &nonshared, bool need_gradient);
+    void ComputeGammaMLEFunctionAndGradient(std::vector<RealT> &result, const SharedInfo &shared, const NonSharedInfo &nonshared, bool need_gradient);
+    void ComputeHessianVectorProduct(std::vector<RealT> &result, const SharedInfo &shared, const NonSharedInfo &nonshared);
+    void Predict(std::vector<RealT> &result, const SharedInfo &shared, const NonSharedInfo &nonshared);
+    void PredictFoldChange(std::vector<RealT> &result, const SharedInfo &shared, const NonSharedInfo &nonshared);
+    void Sample(std::vector<RealT> &result, const SharedInfo &shared, const NonSharedInfo &nonshared);
+    void RunREVI(std::vector<RealT> &result, const SharedInfo &shared, const NonSharedInfo &nonshared);
+    void TestEnergies(std::vector<RealT> &result, const SharedInfo &shared, const NonSharedInfo &nonshared);
+    void CheckZerosInData(std::vector<RealT> &result, const SharedInfo &shared, const NonSharedInfo &nonshared);
+    void ComputeGammaMLEScalingFactor(std::vector<RealT> &result, const SharedInfo &shared, const NonSharedInfo &nonshared);
+    void ComputeFunctionAndGradientSE(std::vector<RealT> &result, const SharedInfo &shared, const NonSharedInfo &nonshared, bool need_gradient);
 
     // getters
     const Options &GetOptions() const { return options; }
     const std::vector<FileDescription> &GetDescriptions() const { return descriptions; }
-    InferenceEngine<RealT> &GetInferenceEngine() { return inference_engine; }
-    ParameterManager<RealT> &GetParameterManager() { return parameter_manager; }
+    InferenceEngine &GetInferenceEngine() { return inference_engine; }
+    ParameterManager &GetParameterManager() { return parameter_manager; }
 };
-
-#include "ComputationEngine.ipp"
 
 #endif

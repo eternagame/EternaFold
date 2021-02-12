@@ -18,8 +18,9 @@
 // Implementation of L-BFGS optimization routine.
 //////////////////////////////////////////////////////////////////////
 
-template<class Real>
-class LBFGS : public LineSearch<Real>
+using Real = double;
+
+class LBFGS : public LineSearch
 {
     const int M;
     const Real TERMINATION_RATIO;
@@ -48,7 +49,5 @@ public:
     virtual void Report(int iteration, const std::vector<double> &x, double f, double step_size) = 0;
     virtual void Report(const std::string &s) = 0;
 };
-
-#include "LBFGS.ipp"
 
 #endif

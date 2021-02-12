@@ -8,7 +8,7 @@
 #include "ParameterManager.hpp"
 #include "OptimizationWrapper.hpp"
 #include "SStruct.hpp"
-#include "Defaults.ipp"
+#include "Defaults.hpp"
 #include "contrafold_api.hpp"
 
 void InitOptions(Options &options)
@@ -43,6 +43,7 @@ void InitOptions(Options &options)
     options.SetIntValue("batch_size", 1);
     options.SetRealValue("s0", 0.0001);
     options.SetRealValue("s1", 0);
+    options.SetRealValue("kappa", 1.0); // reported as missing if you use an api func
     //options.SetRealValue("hyperparam_data",HYPERPARAM_DATA_DEFAULT);
 }
 
@@ -66,8 +67,8 @@ float pfunc(char* seq, char* c)
 
 	std::cout << "constraints: " << constr << std::endl;
 
-    ParameterManager<float> parameter_manager;
-    InferenceEngine<float> inference_engine(options.GetBoolValue("allow_noncomplementary"),0, options.GetRealValue("kappa"));
+    ParameterManager parameter_manager;
+    InferenceEngine inference_engine(options.GetBoolValue("allow_noncomplementary"),0, options.GetRealValue("kappa"));
     inference_engine.RegisterParameters(parameter_manager);
 
     SStruct sstruct;
@@ -77,7 +78,7 @@ float pfunc(char* seq, char* c)
 
 	std::vector<FileDescription> descriptions;
 
-    ComputationEngine<float> computation_engine(options, descriptions, inference_engine, parameter_manager);
+    ComputationEngine computation_engine(options, descriptions, inference_engine, parameter_manager);
 
     inference_engine.ComputeInside();
     float Z = inference_engine.ComputeLogPartitionCoefficient();
@@ -108,8 +109,8 @@ char* predict_struct(char* seq, char* c)
 
 	std::cout << "constraints: " << constr << std::endl;
 
-    ParameterManager<float> parameter_manager;
-    InferenceEngine<float> inference_engine(options.GetBoolValue("allow_noncomplementary"),0, options.GetRealValue("kappa"));
+    ParameterManager parameter_manager;
+    InferenceEngine inference_engine(options.GetBoolValue("allow_noncomplementary"),0, options.GetRealValue("kappa"));
     inference_engine.RegisterParameters(parameter_manager);
 
     SStruct sstruct;
@@ -119,7 +120,7 @@ char* predict_struct(char* seq, char* c)
 
 	std::vector<FileDescription> descriptions;
 
-    ComputationEngine<float> computation_engine(options, descriptions, inference_engine, parameter_manager);
+    ComputationEngine computation_engine(options, descriptions, inference_engine, parameter_manager);
 
 	SStruct *solution;
     solution = new SStruct(sstruct);

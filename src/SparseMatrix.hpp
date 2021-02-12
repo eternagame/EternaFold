@@ -130,6 +130,4 @@ public:
     void PrintSparseBPSEQ(std::ostream &outfile, const std::string &s) const;
 };
 
-#include "SparseMatrix.ipp"
-
 #endif

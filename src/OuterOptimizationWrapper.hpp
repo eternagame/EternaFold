@@ -13,23 +13,19 @@
 #include "OuterOptimizationWrapper.hpp"
 #include "LBFGS.hpp"
 
-template<class RealT>
-class OptimizationWrapper;
-
 //////////////////////////////////////////////////////////////////////
 // class OuterOptimizationWrapper
 //////////////////////////////////////////////////////////////////////
 
-template<class RealT>
-class OuterOptimizationWrapper : public LBFGS<RealT>
+class OuterOptimizationWrapper : public LBFGS
 {
-    OptimizationWrapper<RealT> *optimization_wrapper;
+    OptimizationWrapper *optimization_wrapper;
     const std::vector<RealT> initial_w;
     const std::vector<int> training;
     const std::vector<int> holdout;
     
 public:
-    OuterOptimizationWrapper(OptimizationWrapper<RealT> *optimization_wrapper,
+    OuterOptimizationWrapper(OptimizationWrapper *optimization_wrapper,
                              const std::vector<RealT> &initial_w,
                              const std::vector<int> &training,
                              const std::vector<int> &holdout);
@@ -39,7 +35,5 @@ public:
     void Report(int iteration, const std::vector<RealT> &x, RealT f, RealT step_size);
     void Report(const std::string &s);
 };
-
-#include "OuterOptimizationWrapper.ipp"
 
 #endif

@@ -26,7 +26,6 @@ sub WriteDefaultValues
     print OUTFILE "// Retrieve default parameter values.\n";
     print OUTFILE "/////////////////////////////////////////////////////////////////\n";
     print OUTFILE "\n";
-    print OUTFILE "template<class RealT>\n";
     print OUTFILE "std::vector<RealT> $function_name()\n";
     print OUTFILE "{\n";
     print OUTFILE "    RealT values[] =\n";
@@ -49,7 +48,8 @@ sub main
         exit(1);
     }
 
-    open(OUTFILE, ">Defaults.ipp");
+    open(OUTFILE, ">Defaults.hpp");
+    print OUTFILE "#pragma once \n\n";
     WriteDefaultValues($ARGV[0], "GetDefaultComplementaryValues");
     print OUTFILE "\n";
     WriteDefaultValues($ARGV[1], "GetDefaultNoncomplementaryValues");

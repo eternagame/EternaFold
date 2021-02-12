@@ -5,19 +5,9 @@
 #ifndef OPTIMIZATIONWRAPPER_HPP
 #define OPTIMIZATIONWRAPPER_HPP
 
-#include "Config.hpp"
-#include "Utilities.hpp"
-#include "ComputationWrapper.hpp"
-#include "CGOptimizationWrapper.hpp"
-#include "InnerOptimizationWrapper.hpp"
-#include "InnerOptimizationWrapperLBFGS.hpp"
-#include "InnerOptimizationWrapperSubgradientMethod.hpp"
-#include "InnerOptimizationWrapperEM.hpp"
-#include "InnerOptimizationWrapperStochasticGradient.hpp"
-#if BMRM_AVAILABLE
-#include "InnerOptimizationWrapperBundleMethod.hpp"
-#endif
-#include "OuterOptimizationWrapper.hpp"
+#include <Config.hpp>
+#include <Utilities.hpp>
+#include <ComputationWrapper.hpp>
 
 //////////////////////////////////////////////////////////////////////
 // class OptimizationWrapper
@@ -25,16 +15,15 @@
 // Wrapper class for performing optimization.
 //////////////////////////////////////////////////////////////////////
 
-template<class RealT>
 class OptimizationWrapper
 {
-    ComputationWrapper<RealT> &computation_wrapper;
+    ComputationWrapper &computation_wrapper;
     std::ofstream logfile;
     int indent;
     
 public:
     
-    OptimizationWrapper(ComputationWrapper<RealT> &computation_wrapper);
+    OptimizationWrapper(ComputationWrapper &computation_wrapper);
     ~OptimizationWrapper();
     
     RealT Train(const std::vector<int> &units, std::vector<RealT> &w, std::vector<RealT> &w0, const std::vector<RealT> &C);
@@ -51,12 +40,10 @@ public:
     // getters
     const Options &GetOptions() const { return computation_wrapper.GetOptions(); }
     const std::vector<FileDescription> &GetDescriptions() const { return computation_wrapper.GetDescriptions(); }
-    InferenceEngine<RealT> &GetInferenceEngine() { return computation_wrapper.GetInferenceEngine(); }
-    ParameterManager<RealT> &GetParameterManager() { return computation_wrapper.GetParameterManager(); }
-    ComputationEngine<RealT> &GetComputationEngine() { return computation_wrapper.GetComputationEngine(); }
-    ComputationWrapper<RealT> &GetComputationWrapper() { return computation_wrapper; }
+    InferenceEngine &GetInferenceEngine() { return computation_wrapper.GetInferenceEngine(); }
+    ParameterManager &GetParameterManager() { return computation_wrapper.GetParameterManager(); }
+    ComputationEngine &GetComputationEngine() { return computation_wrapper.GetComputationEngine(); }
+    ComputationWrapper &GetComputationWrapper() { return computation_wrapper; }
 };
-
-#include "OptimizationWrapper.ipp"
 
 #endif

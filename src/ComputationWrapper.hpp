@@ -18,12 +18,11 @@
 // Wrapper class for Computation.
 //////////////////////////////////////////////////////////////////////
 
-template<class RealT>
 class ComputationWrapper
 {
-    ComputationEngine<RealT> &computation_engine;
+    ComputationEngine &computation_engine;
 
-    SharedInfo<RealT> shared_info;
+    SharedInfo shared_info;
     std::vector<NonSharedInfo> nonshared_info;
     
     // the following member variables are used to "cache" work to
@@ -41,7 +40,7 @@ class ComputationWrapper
 public:
     
     // constructor, destructor
-    ComputationWrapper(ComputationEngine<RealT> &computation_engine);
+    ComputationWrapper(ComputationEngine &computation_engine);
     ~ComputationWrapper();
 
     // retrieve list of work units
@@ -77,11 +76,9 @@ public:
     // getters
     const Options &GetOptions() const { return computation_engine.GetOptions(); }
     const std::vector<FileDescription> &GetDescriptions() const { return computation_engine.GetDescriptions(); }
-    InferenceEngine<RealT> &GetInferenceEngine() { return computation_engine.GetInferenceEngine(); }
-    ParameterManager<RealT> &GetParameterManager() { return computation_engine.GetParameterManager(); }
-    ComputationEngine<RealT> &GetComputationEngine() { return computation_engine; }
+    InferenceEngine &GetInferenceEngine() { return computation_engine.GetInferenceEngine(); }
+    ParameterManager &GetParameterManager() { return computation_engine.GetParameterManager(); }
+    ComputationEngine &GetComputationEngine() { return computation_engine; }
 };
-
-#include "ComputationWrapper.ipp"
 
 #endif

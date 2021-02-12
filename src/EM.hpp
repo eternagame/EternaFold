@@ -18,7 +18,7 @@
 // Implementation of EM optimization routine.
 //////////////////////////////////////////////////////////////////////
 
-template<class Real>
+using Real = double;
 class EM
 {
     const Real s0;
@@ -40,7 +40,5 @@ public:
     virtual void Report(int iteration, const std::vector<Real> &x, double f, const std::vector<Real> &g, double step_size) = 0;
     virtual void Report(const std::string &s) = 0;
 };
-
-#include "EM.ipp"
 
 #endif

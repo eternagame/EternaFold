@@ -23,8 +23,8 @@ enum CommandType
 // defined.
 //////////////////////////////////////////////////////////////////////
 
-template<class RealT, class SharedData, class NonSharedData>
-DistributedComputationBase<RealT, SharedData, NonSharedData>::DistributedComputationBase(bool toggle_verbose) : 
+template<class SharedData, class NonSharedData>
+DistributedComputationBase<SharedData, NonSharedData>::DistributedComputationBase(bool toggle_verbose) : 
     toggle_verbose(toggle_verbose),
     processing_time(0),
     total_time(0),
@@ -55,8 +55,8 @@ DistributedComputationBase<RealT, SharedData, NonSharedData>::DistributedComputa
 // ifdef MULTI is defined.
 //////////////////////////////////////////////////////////////////////
 
-template<class RealT, class SharedData, class NonSharedData>
-void DistributedComputationBase<RealT, SharedData, NonSharedData>::RunAsComputeNode()
+template<class SharedData, class NonSharedData>
+void DistributedComputationBase<SharedData, NonSharedData>::RunAsComputeNode()
 {
     Assert(id != 0, "Routine should not be called by master process.");
     
@@ -150,8 +150,8 @@ void DistributedComputationBase<RealT, SharedData, NonSharedData>::RunAsComputeN
 // Closes down MPI connections for compute nodes.
 //////////////////////////////////////////////////////////////////////
 
-template<class RealT, class SharedData, class NonSharedData>
-void DistributedComputationBase<RealT, SharedData, NonSharedData>::StopComputeNodes()
+template<class SharedData, class NonSharedData>
+void DistributedComputationBase<SharedData, NonSharedData>::StopComputeNodes()
 {
 #ifdef MULTI
     if (id == 0)
@@ -176,8 +176,8 @@ void DistributedComputationBase<RealT, SharedData, NonSharedData>::StopComputeNo
 const int NOT_ALLOCATED = -1;
 const int DO_NOT_ALLOCATE = -2;
 
-template<class RealT, class SharedData, class NonSharedData>
-void DistributedComputationBase<RealT, SharedData, NonSharedData>::DistributeComputation(std::vector<RealT> &result,
+template<class SharedData, class NonSharedData>
+void DistributedComputationBase<SharedData, NonSharedData>::DistributeComputation(std::vector<RealT> &result,
                                                                                          const SharedData &shared_data,
                                                                                          const std::vector<NonSharedData> &nonshared_data)
 {
@@ -329,8 +329,8 @@ void DistributedComputationBase<RealT, SharedData, NonSharedData>::DistributeCom
 // Compute the processor usage efficiency.
 //////////////////////////////////////////////////////////////////////
 
-template<class RealT, class SharedData, class NonSharedData>
-double DistributedComputationBase<RealT, SharedData, NonSharedData>::GetEfficiency() const
+template<class SharedData, class NonSharedData>
+double DistributedComputationBase<SharedData, NonSharedData>::GetEfficiency() const
 {
     Assert(IsMasterNode(), "Should only be called by master node.");
 #ifdef MULTI
@@ -346,8 +346,8 @@ double DistributedComputationBase<RealT, SharedData, NonSharedData>::GetEfficien
 // Reset efficiency statistics.
 //////////////////////////////////////////////////////////////////////
 
-template<class RealT, class SharedData, class NonSharedData>
-void DistributedComputationBase<RealT, SharedData, NonSharedData>::ResetEfficiency()
+template<class SharedData, class NonSharedData>
+void DistributedComputationBase<SharedData, NonSharedData>::ResetEfficiency()
 {
     Assert(IsMasterNode(), "Should only be called by master node.");
     processing_time = total_time = 0;

@@ -1,6 +1,8 @@
 /////////////////////////////////////////////////////////////////
 // MakeCoords.hpp
 /////////////////////////////////////////////////////////////////
+#ifndef MAKECOORDS_HPP
+#define MAKECOORDS_HPP
 
 #include <iostream>
 #include <vector>
@@ -56,7 +58,7 @@ struct Constraint
 // class MakeCoords
 /////////////////////////////////////////////////////////////////
 
-class MakeCoords : public LBFGS<double>
+class MakeCoords : public LBFGS
 {
     const SStruct &sstruct;
     std::vector<Constraint> constraints;
@@ -85,3 +87,4 @@ public:
     void Report(const std::string &s);
 };
 
+#endif

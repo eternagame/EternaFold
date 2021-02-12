@@ -1,3 +1,5 @@
+pyternafold.so
+src/pyternafold.*
 */*.o
 src/contrafold
 src/api_test
@@ -6,3 +8,4 @@ input_data/*
 old_input_data/*
 datalists/*.txt
 local_analysis/*
+.vscode

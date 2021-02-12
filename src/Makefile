@@ -1,7 +1,7 @@
 CXX = g++
 
-CXXFLAGS = -O3 -std=c++11 -mfpmath=sse -msse -msse2 -msse3 -DEVIDENCE_SR -DEVIDENCE_PARS \
--DNDEBUG -W -pipe -Wundef -Winline --param large-function-growth=100000 -Wall
+CXXFLAGS = -O3 -std=c++11 -mfpmath=sse -msse -msse2 -msse3 -DEVIDENCE_SR -DEVIDENCE_PARS -I./ \
+-DNDEBUG -W -pipe -Wundef -Winline --param large-function-growth=100000 -Wall -fPIC
 ICCFLAGS = -O3 -xCORE-AVX-I -Wall
 
 LINKFLAGS = -lm
@@ -9,14 +9,35 @@ GDLINKFLAGS = -lgd -lpng
 
 CONTRAFOLD_SRCS = \
 	Contrafold.cpp \
+	ParameterManager.cpp \
+	ComputationEngine.cpp \
+	ComputationWrapper.cpp \
+	OptimizationWrapper.cpp \
+	OuterOptimizationWrapper.cpp \
+	CGOptimizationWrapper.cpp \
+	CGLinear.cpp \
+	InnerOptimizationWrapper.cpp \
+	InnerOptimizationWrapperEM.cpp \
+	EM.cpp \
+	InnerOptimizationWrapperLBFGS.cpp \
+	LBFGS.cpp \
+	InnerOptimizationWrapperSubgradientMethod.cpp \
+	SubgradientMethod.cpp \
+	InnerOptimizationWrapperStochasticGradient.cpp \
+	LineSearch.cpp \
+	InferenceEngine.cpp \
 	FileDescription.cpp \
 	Options.cpp \
 	SStruct.cpp \
+	GammaMLE.cpp \
 	Utilities.cpp
+	# SparseMatrix.cpp \
 
 MAKECOORDS_SRCS = \
 	MakeCoords.cpp \
 	SStruct.cpp \
+	LBFGS.cpp \
+	LineSearch.cpp \
 	Utilities.cpp
 
 PLOTRNA_SRCS = \
@@ -44,14 +65,14 @@ api: api_test
 contrafold: $(CONTRAFOLD_OBJS)
 	$(CXX) $(CXXFLAGS) $(OTHERFLAGS) $(CONTRAFOLD_OBJS) $(LINKFLAGS) -o contrafold
 
-Defaults.ipp: MakeDefaults.pl *.params.*
+Defaults.hpp: MakeDefaults.pl *.params.*
 	perl MakeDefaults.pl contrafold.params.complementary contrafold.params.noncomplementary contrafold.params.profile
 
-Contrafold.o: Contrafold.cpp Defaults.ipp
+Contrafold.o: Contrafold.cpp Defaults.hpp
 	$(CXX) $(CXXFLAGS) $(OTHERFLAGS) -c Contrafold.cpp
 
-api_test: api_test.o contrafold_api.o FileDescription.o Options.o SStruct.o Utilities.o
-	$(CXX) $(CXXFLAGS) $(OTHERFLAGS) FileDescription.o Options.o SStruct.o Utilities.o contrafold_api.o api_test.o $(LINKFLAGS) -o api_test
+api_test: api_test.o contrafold_api.o FileDescription.o Options.o SStruct.o Utilities.o ParameterManager.o InferenceEngine.o ComputationEngine.o
+	$(CXX) $(CXXFLAGS) $(OTHERFLAGS) FileDescription.o Options.o SStruct.o Utilities.o ParameterManager.o InferenceEngine.o ComputationEngine.o contrafold_api.o api_test.o $(LINKFLAGS) -o api_test
 
 contrafold_api.o: contrafold_api.cpp
 	$(CXX) $(CXXFLAGS) $(OTHERFLAGS) -c contrafold_api.cpp
@@ -116,4 +137,4 @@ assembly:
 	$(CXX) $(CXXFLAGS) $(OTHERFLAGS) -c $<
 
 clean:
-	rm -f contrafold make_coords plot_rna score_prediction *.o Defaults.ipp
+	rm -f contrafold make_coords plot_rna score_prediction *.o Defaults.hpp

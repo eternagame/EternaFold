@@ -8,22 +8,13 @@
 #define INNEROPTIMIZATIONWRAPPERSTOCHASTICGRADIENT_HPP
 
 #include "OptimizationWrapper.hpp"
-
-template<class RealT>
-class StochasticGradient;
-
-template<class RealT>
-class OptimizationWrapper;
-
-template<class RealT>
-class InnerOptimizationWrapper;
+#include "InnerOptimizationWrapper.hpp"
 
 //////////////////////////////////////////////////////////////////////
 // class InnerOptimizationWrapperStochasticGradient
 //////////////////////////////////////////////////////////////////////
 
-template<class RealT>
-class InnerOptimizationWrapperStochasticGradient : public InnerOptimizationWrapper<RealT>
+class InnerOptimizationWrapperStochasticGradient : public InnerOptimizationWrapper
 {
     RealT log_base;
     int batch_size;
@@ -37,7 +28,7 @@ class InnerOptimizationWrapperStochasticGradient : public InnerOptimizationWrapp
     RealT lig_hyperparam_data;
 
 public:
-    InnerOptimizationWrapperStochasticGradient(OptimizationWrapper<RealT> *optimization_wrapper,
+    InnerOptimizationWrapperStochasticGradient(OptimizationWrapper *optimization_wrapper,
                                                const std::vector<int> &units,
                                                const std::vector<RealT> &C);
 
@@ -50,7 +41,5 @@ public:
     int GetLogicalIndex(int i, int j, int k, int which_data);
     bool FindZerosInData(int i, int j, int which_data);
 };
-
-#include "InnerOptimizationWrapperStochasticGradient.ipp"
 
 #endif

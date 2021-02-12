@@ -28,7 +28,6 @@ using namespace std;
 // Implementation of bundle optimization routine.
 //////////////////////////////////////////////////////////////////////
 
-template<class RealT>
 class BundleMethod
 {
   const int   MAX_ITERATIONS;

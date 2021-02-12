@@ -19,7 +19,6 @@
 // class InferenceEngine
 //////////////////////////////////////////////////////////////////////
 
-template<class RealT>
 class InferenceEngine
 {
     static constexpr double DATA_LOW_THRESH = 1e-7;  // used for the data so that log is not -Inf
@@ -29,7 +28,7 @@ class InferenceEngine
     unsigned char char_mapping[256];
     int is_complementary[M+1][M+1];
     bool cache_initialized;
-    ParameterManager<RealT> *parameter_manager;
+    ParameterManager *parameter_manager;
 
     Die* die;
     
@@ -315,7 +314,7 @@ public:
     ~InferenceEngine();
 
     // register params with the parameter manager
-    void RegisterParameters(ParameterManager<RealT> &parameter_manager);
+    void RegisterParameters(ParameterManager &parameter_manager);
                             
     // load sequence
     void LoadSequence(const SStruct &sstruct);
@@ -331,7 +330,7 @@ public:
 
     // Viterbi inference
     void ComputeViterbi();
-    RealT GetViterbiScore() const;
+    RealT GetViterbiScore() const { return F5v[L]; }
     std::vector<int> PredictPairingsViterbi() const;
     std::vector<RealT> ComputeViterbiFeatureCounts();
 
@@ -384,7 +383,5 @@ public:
     void UpdateEvidenceStructures(int which_data);
     void UpdateEvidenceStructures();
 };
-
-#include "InferenceEngine.ipp"
 
 #endif
