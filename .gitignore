@@ -3,6 +3,7 @@ src/pyternafold.*
 */*.o
 src/contrafold
 src/api_test
+src/score_prediction
 src/optimize.*
 input_data/*
 old_input_data/*
