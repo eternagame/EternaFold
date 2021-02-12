@@ -72,7 +72,6 @@ struct ParameterGroup
 // class ParameterManager
 //////////////////////////////////////////////////////////////////////
 
-template<class RealT>
 class ParameterManager
 {
     std::vector<std::string> names;
@@ -114,7 +113,5 @@ public:
     size_t GetNumPhysicalParameters() const { return physical_to_logical.size(); }
     size_t GetNumLogicalParameters() const { return logical_to_physical.size(); }
 };
-
-#include "ParameterManager.ipp"
 
 #endif

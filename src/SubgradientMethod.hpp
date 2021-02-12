@@ -17,7 +17,7 @@
 // Implementation of subgradient optimization routine.
 //////////////////////////////////////////////////////////////////////
 
-template<class RealT>
+using RealT = double;
 class SubgradientMethod
 {
     const int   MAX_ITERATIONS;
@@ -44,7 +44,5 @@ public:
                         RealT norm_bound, RealT step_size) = 0;
     virtual void Report(const std::string &s) = 0;
 };
-
-#include "SubgradientMethod.ipp"
 
 #endif

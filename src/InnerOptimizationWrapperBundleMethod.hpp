@@ -7,27 +7,27 @@
 #ifndef INNEROPTIMIZATIONWRAPPERBUNDLEMETHOD_HPP
 #define INNEROPTIMIZATIONWRAPPERBUNDLEMETHOD_HPP
 
-#include "OptimizationWrapper.hpp"
-#include "BundleMethod.hpp"
+#include <OptimizationWrapper.hpp>
+#include <BundleMethod.hpp>
 
-template<class RealT>
+
 class BundleMethod;
 
-template<class RealT>
+
 class OptimizationWrapper;
 
-template<class RealT>
+
 class InnerOptimizationWrapper;
 
 //////////////////////////////////////////////////////////////////////
 // class InnerOptimizationWrapperBundleMethod
 //////////////////////////////////////////////////////////////////////
 
-template<class RealT>
-class InnerOptimizationWrapperBundleMethod : public BundleMethod<RealT>, public InnerOptimizationWrapper<RealT>
+
+class InnerOptimizationWrapperBundleMethod : public BundleMethod<RealT>, public InnerOptimizationWrapper
 {
 public:
-    InnerOptimizationWrapperBundleMethod(OptimizationWrapper<RealT> *optimization_wrapper,
+    InnerOptimizationWrapperBundleMethod(OptimizationWrapper *optimization_wrapper,
                                                const std::vector<int> &units,
                                                const std::vector<RealT> &C);
     
@@ -38,7 +38,5 @@ public:
     void Report(const std::string &s);
     RealT Minimize(std::vector<RealT> &x0);
 };
-
-#include "InnerOptimizationWrapperBundleMethod.ipp"
 
 #endif

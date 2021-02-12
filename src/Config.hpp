@@ -23,6 +23,9 @@ const int SHARED_PARAMETER_SIZE = 5000;
 // Options related to general inference
 //////////////////////////////////////////////////////////////////////
 
+// Compile for using REVI or not
+#define USE_REVI									1
+
 // showing timings for inference routines
 #define SHOW_TIMINGS                               0
 

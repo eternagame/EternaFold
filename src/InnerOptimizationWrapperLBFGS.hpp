@@ -7,24 +7,15 @@
 #ifndef INNEROPTIMIZATIONWRAPPERLBFGS_HPP
 #define INNEROPTIMIZATIONWRAPPERLBFGS_HPP
 
+#include "InnerOptimizationWrapper.hpp"
 #include "OptimizationWrapper.hpp"
 #include "LBFGS.hpp"
-
-template<class RealT>
-class LBFGS;
-
-template<class RealT>
-class OptimizationWrapper;
-
-template<class RealT>
-class InnerOptimizationWrapper;
 
 //////////////////////////////////////////////////////////////////////
 // class InnerOptimizationWrapperLBFGS
 //////////////////////////////////////////////////////////////////////
 
-template<class RealT>
-class InnerOptimizationWrapperLBFGS : public LBFGS<RealT>, public InnerOptimizationWrapper<RealT>
+class InnerOptimizationWrapperLBFGS : public LBFGS, public InnerOptimizationWrapper
 {
     RealT log_base;
     RealT hyperparam_data;
@@ -32,7 +23,7 @@ class InnerOptimizationWrapperLBFGS : public LBFGS<RealT>, public InnerOptimizat
     RealT lig_hyperparam_data;
 
 public:
-    InnerOptimizationWrapperLBFGS(OptimizationWrapper<RealT> *optimization_wrapper,
+    InnerOptimizationWrapperLBFGS(OptimizationWrapper *optimization_wrapper,
                                   const std::vector<int> &units,
                                   const std::vector<RealT> &weights_initial,
                                   const std::vector<RealT> &C);
@@ -43,7 +34,5 @@ public:
     void Report(const std::string &s);
     RealT Minimize(std::vector<RealT> &x0);
 };
-
-#include "InnerOptimizationWrapperLBFGS.ipp"
 
 #endif

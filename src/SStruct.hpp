@@ -16,6 +16,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include "Config.hpp" // why?
 #include "Utilities.hpp"
 
 //////////////////////////////////////////////////////////////////////
@@ -95,6 +96,8 @@ public:
     // output in various formats
     void WriteBPSEQ(std::ostream &outfile, const int seq = 0) const;
     void WriteParens(std::ostream &outfile) const;
+    void WriteParensOnly(std::ostream &outfile) const;
+    void WriteBPPSEQ(std::ostream &outfile, std::vector<std::vector<double> > potential, const int seq = 0);
 
     // compute alignment percent identity
     double ComputePercentIdentity() const;

@@ -18,7 +18,7 @@
 // systems Ax = b, where A is symmetric positive definite.
 //////////////////////////////////////////////////////////////////////
 
-template<class Real>
+using Real = double;
 class CGLinear {
 public:
     Real Minimize
@@ -37,7 +37,5 @@ public:
     virtual void Report(int iteration, const std::vector<double> &x, double f, double step_size) = 0;
     virtual void Report(const std::string &s) = 0;
 };
-
-#include "CGLinear.ipp"
 
 #endif

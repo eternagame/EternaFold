@@ -7,7 +7,7 @@
 #ifndef LOGSPACE_HPP
 #define LOGSPACE_HPP
 
-#include "Utilities.hpp"
+#include "Utilities.ipp"
 
 #define NEG_INF -2e20
 

@@ -17,7 +17,7 @@
 // Implementation of MLE for Gamma function
 //////////////////////////////////////////////////////////////////////
 
-template<class Real>
+using Real = double;
 class GammaMLE
 {
     const int    MAX_ITER_K;
@@ -49,7 +49,5 @@ public:
     virtual void ComputeGammaMLEScalingFactor(std::vector<Real> &g, const std::vector<Real> &w, int i, int j, int which_data) = 0;
 
 };
-
-#include "GammaMLE.ipp"
 
 #endif

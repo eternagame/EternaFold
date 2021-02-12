@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <list>
 #include <climits>
 #include <fstream>
 #include <iomanip>
@@ -28,6 +29,7 @@
 
 typedef unsigned char BYTE;
 const char DIR_SEPARATOR_CHAR = '/';
+using RealT = double;
 
 // necessary macros
 #define _level_2_str(s) _level_1_str(s)
@@ -132,7 +134,7 @@ template<typename T1, typename T2, typename T3> std::ostream &operator<<(std::os
 
 // math operators
 template<typename T> T Sqrt(const T x);
-template<typename T> T Exp(const T x);
+// template<typename T> T Exp(const T x);
 template<typename T> T Log(const T x);
 template<typename T> T Pow(const T x, const T p);
 template<typename T> T Tanh(const T x);
@@ -211,7 +213,6 @@ inline bool IsComplementary(char c, char d);
 std::string GetDirName(const std::string &path);
 std::string GetBaseName(const std::string &path);
 
-
-#include "Utilities.ipp"
+RealT Psi(RealT x);
 
 #endif

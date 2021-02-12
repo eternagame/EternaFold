@@ -1,0 +1,34 @@
+# from parent eternafold dir
+~/programs/build_binder/build/bin/binder --config binder.config --root-module pyternafold --prefix src --bind "" --single-file all_includes.hpp  --  -I./src -std=c++11 -DNDEBUG 
+
+cd src
+
+make
+g++ -O3 -std=c++11 -mfpmath=sse -msse -msse2 -msse3 -DEVIDENCE_SR -DEVIDENCE_PARS -I./ -DNDEBUG -W -pipe -Wundef -Winline --param large-function-growth=100000 -Wall -fPIC  -c EncapsulatedPostScript.cpp
+
+pybase=`which python3`
+g++ \
+  -O3 \
+  -I${pybase::-12}/include/python3.7m -I../extern/pybind11/include -I./ -shared  \
+  -std=c++11  -c pyternafold.cpp  \
+  -o pyternafold.o -fPIC
+
+cd ..
+
+g++ -o pyternafold.so -shared src/pyternafold.o \
+  src/ParameterManager.o src/LBFGS.o src/LineSearch.o \
+  src/ComputationEngine.o src/ComputationWrapper.o \
+  src/OptimizationWrapper.o \
+  src/InnerOptimizationWrapperStochasticGradient.o \
+  src/InnerOptimizationWrapperSubgradientMethod.o \
+  src/InnerOptimizationWrapperLBFGS.o \
+  src/OuterOptimizationWrapper.o \
+  src/InnerOptimizationWrapperEM.o \
+  src/InnerOptimizationWrapper.o \
+  src/CGOptimizationWrapper.o \
+  src/SubgradientMethod.o \
+  src/CGLinear.o \
+  src/EM.o \
+  src/GammaMLE.o \
+  src/FileDescription.o  src/Options.o \
+  src/SStruct.o  src/Utilities.o src/EncapsulatedPostScript.o src/InferenceEngine.o src/contrafold_api.o #src/Contrafold.o

@@ -11,20 +11,16 @@
 #include "OptimizationWrapper.hpp"
 #include "LBFGS.hpp"
 
-template<class RealT>
-class OptimizationWrapper;
-
 //////////////////////////////////////////////////////////////////////
 // class InnerOptimizationWrapper
 //////////////////////////////////////////////////////////////////////
 
-template<class RealT>
 class InnerOptimizationWrapper 
 {
     
 protected:
     
-    OptimizationWrapper<RealT> *optimization_wrapper;
+    OptimizationWrapper *optimization_wrapper;
     const std::vector<int> units;
     const std::vector<RealT> weights_initial;
     const std::vector<RealT> C;
@@ -32,12 +28,12 @@ protected:
 
 public:
     
-    InnerOptimizationWrapper(OptimizationWrapper<RealT> *optimization_wrapper,
+    InnerOptimizationWrapper(OptimizationWrapper *optimization_wrapper,
                              const std::vector<int> &units,
                              const std::vector<RealT> &weights_initial,
                              const std::vector<RealT> &C);
 
-    InnerOptimizationWrapper(OptimizationWrapper<RealT> *optimization_wrapper,
+    InnerOptimizationWrapper(OptimizationWrapper *optimization_wrapper,
                              const std::vector<int> &units,
                              const std::vector<RealT> &C);
 
@@ -47,7 +43,5 @@ public:
     
     virtual RealT Minimize(std::vector<RealT> &x0) = 0;
 };
-
-#include "InnerOptimizationWrapper.ipp"
 
 #endif

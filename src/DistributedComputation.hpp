@@ -97,7 +97,7 @@
 // Class for distributing computation (see description above).
 //////////////////////////////////////////////////////////////////////
 
-template<class RealT, class SharedData, class NonSharedData>
+template<class SharedData, class NonSharedData>
 class DistributedComputationBase
 {
     bool toggle_verbose;
@@ -150,11 +150,11 @@ public:
 // Partial specialization of class to particular result data types.
 //////////////////////////////////////////////////////////////////////
 
-template<class RealT, class SharedData, class NonSharedData>
-class DistributedComputation : public DistributedComputationBase<RealT, SharedData, NonSharedData>
+template<class SharedData, class NonSharedData>
+class DistributedComputation : public DistributedComputationBase<SharedData, NonSharedData>
 {
 public:
-    DistributedComputation(bool toggle_verbose) : DistributedComputationBase<RealT, SharedData, NonSharedData>(toggle_verbose) {}
+    DistributedComputation(bool toggle_verbose) : DistributedComputationBase<SharedData, NonSharedData>(toggle_verbose) {}
 };
 
 #ifdef MULTI

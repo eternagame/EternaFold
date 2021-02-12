@@ -25,7 +25,8 @@
 // the function f(x) to its new value f(x + t*d).
 //////////////////////////////////////////////////////////////////////
 
-template<class Real>
+using Real = double;
+
 class LineSearch
 {
     const Real T_INIT;
@@ -66,7 +67,5 @@ public:
     virtual double ComputeFunction(const std::vector<double> &x) = 0;
     virtual void ComputeGradient(std::vector<double> &g, const std::vector<double> &x) = 0;
 };
-
-#include "LineSearch.ipp"
 
 #endif

@@ -252,7 +252,7 @@ void MakeCoords::AddConstraints()
 /////////////////////////////////////////////////////////////////
 
 MakeCoords::MakeCoords(const SStruct &sstruct) : 
-    LBFGS<double>(), sstruct(sstruct)
+    LBFGS(), sstruct(sstruct)
 {
     InitialPlacement();
     AddConstraints();

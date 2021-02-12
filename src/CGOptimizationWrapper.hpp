@@ -10,23 +10,21 @@
 #include "OptimizationWrapper.hpp"
 #include "CGLinear.hpp"
 
-template<class RealT>
 class OptimizationWrapper;
 
 //////////////////////////////////////////////////////////////////////
 // class CGOptimizationWrapper
 //////////////////////////////////////////////////////////////////////
 
-template<class RealT>
-class CGOptimizationWrapper : public CGLinear<RealT>
+class CGOptimizationWrapper : public CGLinear
 {
-    OptimizationWrapper<RealT> *optimization_wrapper;
+    OptimizationWrapper *optimization_wrapper;
     const std::vector<int> units;
     const std::vector<RealT> w;
     const std::vector<RealT> C;
     
 public:
-    CGOptimizationWrapper(OptimizationWrapper<RealT> *optimizer,
+    CGOptimizationWrapper(OptimizationWrapper *optimizer,
                           const std::vector<int> &units,
                           const std::vector<RealT> &w,
                           const std::vector<RealT> &C);
@@ -35,7 +33,5 @@ public:
     void Report(int iteration, const std::vector<RealT> &x, RealT f, RealT step_size);
     void Report(const std::string &s);
 };
-
-#include "CGOptimizationWrapper.ipp"
 
 #endif

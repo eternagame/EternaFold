@@ -7,27 +7,18 @@
 #ifndef INNEROPTIMIZATIONWRAPPERSUBGRADIENTMETHOD_HPP
 #define INNEROPTIMIZATIONWRAPPERSUBGRADIENTMETHOD_HPP
 
+#include "InnerOptimizationWrapper.hpp"
 #include "OptimizationWrapper.hpp"
 #include "SubgradientMethod.hpp"
-
-template<class RealT>
-class SubgradientMethod;
-
-template<class RealT>
-class OptimizationWrapper;
-
-template<class RealT>
-class InnerOptimizationWrapper;
 
 //////////////////////////////////////////////////////////////////////
 // class InnerOptimizationWrapperSubgradientMethod
 //////////////////////////////////////////////////////////////////////
 
-template<class RealT>
-class InnerOptimizationWrapperSubgradientMethod : public SubgradientMethod<RealT>, public InnerOptimizationWrapper<RealT>
+class InnerOptimizationWrapperSubgradientMethod : public SubgradientMethod, public InnerOptimizationWrapper
 {
 public:
-    InnerOptimizationWrapperSubgradientMethod(OptimizationWrapper<RealT> *optimization_wrapper,
+    InnerOptimizationWrapperSubgradientMethod(OptimizationWrapper *optimization_wrapper,
                                                const std::vector<int> &units,
                                                const std::vector<RealT> &C);
     
@@ -38,7 +29,5 @@ public:
     void Report(const std::string &s);
     RealT Minimize(std::vector<RealT> &x0);
 };
-
-#include "InnerOptimizationWrapperSubgradientMethod.ipp"
 
 #endif

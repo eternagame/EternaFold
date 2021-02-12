@@ -13,21 +13,24 @@
 #include "ParameterManager.hpp"
 #include "Utilities.hpp"
 #include "LogSpace.hpp"
+#include "rand.h"
 
 //////////////////////////////////////////////////////////////////////
 // class InferenceEngine
 //////////////////////////////////////////////////////////////////////
 
-template<class RealT>
 class InferenceEngine
 {
     static constexpr double DATA_LOW_THRESH = 1e-7;  // used for the data so that log is not -Inf
 
+    const double kappa;
     const bool allow_noncomplementary;
     unsigned char char_mapping[256];
     int is_complementary[M+1][M+1];
     bool cache_initialized;
-    ParameterManager<RealT> *parameter_manager;
+    ParameterManager *parameter_manager;
+
+    Die* die;
     
     int num_data_sources;
     // dimensions
@@ -307,11 +310,11 @@ class InferenceEngine
 public:
 
     // constructor and destructor
-    InferenceEngine(bool allow_noncomplementary, const int num_data_sources);
+    InferenceEngine(bool allow_noncomplementary, const int num_data_sources, const double kappa);
     ~InferenceEngine();
 
     // register params with the parameter manager
-    void RegisterParameters(ParameterManager<RealT> &parameter_manager);
+    void RegisterParameters(ParameterManager &parameter_manager);
                             
     // load sequence
     void LoadSequence(const SStruct &sstruct);
@@ -327,9 +330,12 @@ public:
 
     // Viterbi inference
     void ComputeViterbi();
-    RealT GetViterbiScore() const;
+    RealT GetViterbiScore() const { return F5v[L]; }
     std::vector<int> PredictPairingsViterbi() const;
     std::vector<RealT> ComputeViterbiFeatureCounts();
+
+    void GetViterbiFeatures();
+    void GetViterbiFeaturesESS();
 
     // MEA inference
     void ComputeInside();
@@ -341,6 +347,11 @@ public:
     std::vector<int> PredictPairingsPosteriorCentroid(const RealT gamma) const;
     RealT *GetPosterior(const RealT posterior_cutoff) const;
     
+    // stoch traceback
+    void InitRand(unsigned int seed);
+    std::vector<int> PredictPairingsStochasticTraceback() const;
+    std::vector<int> PredictPairingsStochasticTracebackESS() const;
+
     // EM inference
     void ComputeInsideESS();
     void ComputeOutsideESS();
@@ -348,6 +359,13 @@ public:
 	void ComputePosteriorESS();
     RealT ComputeLogPartitionCoefficientESS() const;
     std::vector<RealT> ComputeESS();    
+
+    //REVI
+    void UpdateREVIVec(std::vector<RealT> perturb_unpaired, std::vector<RealT> perturb_paired);
+    void InitializeREVIVec();
+    std::vector<RealT> GetREVIError(std::vector<RealT> p_i);
+    std::vector<std::vector<double> > GetREVIvec_up();
+    std::vector<std::vector<double> > GetREVIvec_pr();
 
     // Learning Evidence CPD
     RealT ComputeGammaMLESum(std::vector<int> ev_cpd_id, bool ignorePairing, bool usePosterior, int which_data);
@@ -365,7 +383,5 @@ public:
     void UpdateEvidenceStructures(int which_data);
     void UpdateEvidenceStructures();
 };
-
-#include "InferenceEngine.ipp"
 
 #endif

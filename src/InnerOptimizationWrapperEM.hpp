@@ -10,30 +10,18 @@
 #include "OptimizationWrapper.hpp"
 #include "EM.hpp"
 #include "GammaMLE.hpp"
-
-template<class RealT>
-class EM;
-
-template<class RealT>
-class GammaMLE;
-
-template<class RealT>
-class OptimizationWrapper;
-
-template<class RealT>
-class InnerOptimizationWrapper;
+#include "InnerOptimizationWrapper.hpp"
 
 //////////////////////////////////////////////////////////////////////
 // class InnerOptimizationWrapperEM
 //////////////////////////////////////////////////////////////////////
 
-template<class RealT>
-class InnerOptimizationWrapperEM : public EM<RealT>, public GammaMLE<RealT>, public InnerOptimizationWrapper<RealT>
+class InnerOptimizationWrapperEM : public EM, public GammaMLE, public InnerOptimizationWrapper
 {
     RealT log_base;
     
 public:
-    InnerOptimizationWrapperEM(OptimizationWrapper<RealT> *optimization_wrapper,
+    InnerOptimizationWrapperEM(OptimizationWrapper *optimization_wrapper,
                                   const std::vector<int> &units,
                                   const std::vector<RealT> &C);
     
@@ -51,7 +39,4 @@ public:
     void ComputeGammaMLEScalingFactor(std::vector<RealT> &g, const std::vector<RealT> &w, int i, int j, int which_data);
 
 };
-
-#include "InnerOptimizationWrapperEM.ipp"
-
 #endif
