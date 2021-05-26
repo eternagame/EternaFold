@@ -1,6 +1,6 @@
 CXX = g++
 
-CXXFLAGS = -O3 -mfpmath=sse -msse -msse2 -msse3 -DEVIDENCE_SR -DEVIDENCE_PARS \
+CXXFLAGS = -O3 -std=c++11 -mfpmath=sse -msse -msse2 -msse3 -DEVIDENCE_SR -DEVIDENCE_PARS \
 -DNDEBUG -W -pipe -Wundef -Winline --param large-function-growth=100000 -Wall
 ICCFLAGS = -O3 -xCORE-AVX-I -Wall
 
