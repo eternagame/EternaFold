@@ -11,8 +11,6 @@ EternaFold is possible thanks to [CONTRAfold-SE](https://github.com/csfoo/contra
 Clone the repository and run `make` in `src` to compile.
 Multithreaded version: run `make multi` in `src`.
 
-(CONTRAfold-SE has been tested on g++ 4.4.7 and 4.8.4.)
-
 ### Prediction
 
 #### Single-structure prediction
