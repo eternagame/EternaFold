@@ -1,5 +1,14 @@
 # Setup for LinearFold-E patch
 
+The EternaFold parameters have also been adapted for use with the LinearFold algorithm, described in
+
+Liang Huang, He Zhang, Dezhong Deng, Kai Zhao, Kaibo Liu,
+David Hendrix, and David Mathews (2019). LinearFold: Linear-Time
+Approximate RNA Folding by 5'-to-3' Dynamic Programming and Beam Search.
+Bioinformatics, Vol. 35, July 2019, Special Issue of ISMB 2019 Proceedings.
+
+LinearFold has a different license than EternaFold, please read the LinearFold [license](https://github.com/LinearFold/LinearFold/blob/master/LICENSE) before proceeding.
+
 1. Clone the LinearFold repository at [https://github.com/LinearFold/LinearFold](https://github.com/LinearFold/LinearFold) :
 
 ```
