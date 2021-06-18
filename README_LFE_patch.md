@@ -2,19 +2,19 @@
 
 1. Clone the LinearFold repository at [https://github.com/LinearFold/LinearFold](https://github.com/LinearFold/LinearFold) :
 
-```python
-git clone [https://github.com/LinearFold/LinearFold.git](https://github.com/LinearFold/LinearFold.git)
+```
+git clone https://github.com/LinearFold/LinearFold.git
 ```
 
 2. To apply the patch and compile:
 
-```python
+```
 cd LinearFold
 git apply --whitespace=fix /path/to/EternaFold/LinearFold-E.patch
 make
 ```
 
-3. Add the following line to your arnie file:
+3. Add the following line to your Arnie file:
 
 `linearfold: /path/to/LinearFold/bin`
 
@@ -39,7 +39,7 @@ print(mfe(ref_seq, linear=True, package='eternafold'))
 
 Expected output:
 
-```python
+```
 Vienna RNAfold:
 ...((((((...(((((....(((((((....(((((((.(((((...((((((..(((...............)))....))))))(((((((......))))))).((((((......))))))...((((.((.(((((........))))))).))))((((((((..(((((....)))))..)).))))))................))))))))))))....((((((...))))))......(((((((..(((((.(((.(((..........))).))).)))))..((..((((..(((((..((((((((....(((((...............(((((((((((((.((((((((((.......))))))).(((......)))........))).)))))).)))))))....)))))..)))))).))...)))))....)))).))(((((.....))))).......)))))))..)))))))..))))))))))).................(((((.((.......((((((((.((.(((((((((............)))))....)))).)).)))))).)).......)).)))))..
 
