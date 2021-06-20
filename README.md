@@ -120,15 +120,15 @@ This code has been modified in two ways that means its output, even using the CO
 
 2. The minimum allowable hairpin size was increased from `0` to `3` to prevent structure predictions with `(())` hairpins. To revert back to the original CONTRAfold behavior, set `C_MIN_HP_LENGTH=0` in `Config.hpp` before compiling.
 
-Example Hammerhead Ribozyme sequence: `CGCUGUCUGUACUUGUAUCAGUACACUGACGAGUCCCUAAAGGACGAAACAGCG`
+Predictions for Hammerhead Ribozyme sequence, using default CONTRAfold parameters: `CGCUGUCUGUACUUGUAUCAGUACACUGACGAGUCCCUAAAGGACGAAACAGCG`
 
-contrafold predict hhr.bpseq 
+contrafold predict hhr.bpseq --partition 
 
-
-CONTRAfold v2.02: 
-CONTRAfold-SE:
-EternaFold code, C_MIN_HP_LENGTH=0:
-EternaFold code, C_MIN_HP_LENGTH=3:
+|CONTRAfold v2.02| 6.87394|
+|CONTRAfold-SE| 6.87394|
+|EternaFold code, no ML fix and C_MIN_HP_LENGTH=0| 6.87394|
+|EternaFold code, C_MIN_HP_LENGTH=0| 6.83585|
+|EternaFold code | 6.77285 |
 
 
 
