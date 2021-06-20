@@ -124,12 +124,10 @@ Predictions for Hammerhead Ribozyme sequence, using default CONTRAfold parameter
 
 contrafold predict hhr.bpseq --partition 
 
+| Version | hhr.bpseq Log Partition Coefficient |
+| --- | ----------- |
 |CONTRAfold v2.02| 6.87394|
 |CONTRAfold-SE| 6.87394|
 |EternaFold code, no ML fix and C_MIN_HP_LENGTH=0| 6.87394|
 |EternaFold code, C_MIN_HP_LENGTH=0| 6.83585|
 |EternaFold code | 6.77285 |
-
-
-
-
