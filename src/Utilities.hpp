@@ -25,6 +25,7 @@
 #include <string>
 #include <sys/time.h>
 #include <vector>
+#include <unistd.h>
 
 typedef unsigned char BYTE;
 const char DIR_SEPARATOR_CHAR = '/';
