@@ -48,17 +48,6 @@ Log partition coefficient for "test.seq": 13.7489
 
 Please see the documentation of [CONTRAfold](http://contra.stanford.edu/contrafold/manual_v2_02.pdf) for further information on parameters and usage. See below for documented discrepancies (besides parameters) from CONTRAfold codebases.
 
-#### Fold change prediction
-Predict log K_MS2 values for riboswitch molecules to MS2 in the presence and absence of small molecule aptamers.
-
-`./src/contrafold predict-foldchange test_riboswitch.bpseq --params parameters/EternaFoldParams.v1`
-
-Output:
-
-```
-
-```
-
 
 ### Training
 
