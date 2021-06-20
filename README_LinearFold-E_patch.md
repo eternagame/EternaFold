@@ -3,13 +3,9 @@
 The EternaFold parameters have also been adapted for use with the LinearFold and LinearPartition algorithms, described in
 
 
-LinearFold: Linear-Time Approximate RNA Folding by 5’-to-3’ Dynamic Programming and Beam Search. Bioinformatics, Volume 35, Issue 14, July 2019, Pages i295–i304. ISMB 2019
+Liang Huang, He Zhang, Dezhong Deng, Kai Zhao, Kaibo Liu, David Hendrix, David Mathews. *LinearFold: Linear-time approximate RNA folding by 5’-to-3’ dynamic programming and beam search.* Bioinformatics, Volume 35, Issue 14, July 2019, Pages i295–i304. ISMB 2019
 
-Liang Huang, He Zhang, Dezhong Deng, Kai Zhao, Kaibo Liu, David Hendrix, David Mathews
-
-LinearPartition: linear-time approximation of RNA folding partition function and base-pairing probabilities. Bioinformatics, Volume 36, Issue Supplement_1, July 2020, Pages i258–i267. ISMB 2020
-
-He Zhang, Liang Zhang, David Mathews, Liang Huang
+He Zhang, Liang Zhang, David Mathews, Liang Huang. *LinearPartition: Linear-time approximation of RNA folding partition function and base-pairing probabilities.* Bioinformatics, Volume 36, Issue Supplement_1, July 2020, Pages i258–i267. ISMB 2020
 
 LinearFold and LinearPartition have different licenses than EternaFold, please read the LinearFold [license](https://github.com/LinearFold/LinearFold/blob/master/LICENSE) and LinearPartition [license](https://github.com/LinearFold/LinearPartition/blob/master/LICENSE) before proceeding.
 
