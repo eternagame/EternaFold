@@ -27,6 +27,15 @@ Predict log K_MS2 values for riboswitch molecules to MS2 in the presence and abs
 
 `contrafold predict-foldchange test_ms2.bpseq`
 
+#### Discrepancies from CONTRAfold-SE code
+
+This code has been modified in two ways that means its output will differ from the CONTRAfold codebase here and the CONTRAfold-SE codebase here.
+
+1. A bug was fixed in the multiloop traceback `InferenceEngine.ipp` which was first identified by He Zhang (Oregon State). 
+
+2. The minimum allowable hairpin size was increased from `0` to `3` to prevent structure predictions with `(())` hairpins. To revert back to the original CONTRAfold behavior, set `C_MIN_HP_LENGTH=0` in `Config.hpp` before compiling.
+
+
 ### Training
 
 Training data is in `input_data` (unzip first).
