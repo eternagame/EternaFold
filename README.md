@@ -16,24 +16,48 @@ See instructions in [README_LinearFold-E_patch.md](README_LinearFold-E_patch.md)
 ### Prediction
 
 #### Single-structure prediction
-Predict the MEA structure of sequence "test", using the EternaFold parameters:
+Predict the MEA structure of example test sequence (Hammerhead ribozyme), using the EternaFold parameters:
 
-`contrafold predict test.bpseq --params parameters/EternaFoldParams.v1`
+`contrafold predict test.seq --params parameters/EternaFoldParams.v1`
 
-Please see the documentation of [CONTRAfold](http://contra.stanford.edu/contrafold/manual_v2_02.pdf) for further information on parameters and usage.
+Output:
+```
+Training mode: 
+Use constraints: 0
+Use evidence: 0
+Predicting using MEA estimator.
+>test.seq
+CGCUGUCUGUACUUGUAUCAGUACACUGACGAGUCCCUAAAGGACGAAACAGCG
+>structure
+(((((((((((((......))))))..)....((((.....))))...))))))
+```
+
+Predict the ensemble free energy:
+
+```
+$ ./src/contrafold predict test.seq --params parameters/EternaFoldParams.v1 --partition
+```
+
+Output:
+```
+Training mode: 
+Use constraints: 0
+Use evidence: 0
+Log partition coefficient for "test.seq": 13.7489
+```
+
+Please see the documentation of [CONTRAfold](http://contra.stanford.edu/contrafold/manual_v2_02.pdf) for further information on parameters and usage. See below for documented discrepancies (besides parameters) from CONTRAfold codebases.
 
 #### Fold change prediction
 Predict log K_MS2 values for riboswitch molecules to MS2 in the presence and absence of small molecule aptamers.
 
-`contrafold predict-foldchange test_ms2.bpseq`
+`./src/contrafold predict-foldchange test_riboswitch.bpseq --params parameters/EternaFoldParams.v1`
 
-#### Discrepancies from CONTRAfold-SE code
+Output:
 
-This code has been modified in two ways that means its output will differ from the CONTRAfold codebase here and the CONTRAfold-SE codebase here.
+```
 
-1. A bug was fixed in the multiloop traceback `InferenceEngine.ipp` which was first identified by He Zhang (Oregon State). 
-
-2. The minimum allowable hairpin size was increased from `0` to `3` to prevent structure predictions with `(())` hairpins. To revert back to the original CONTRAfold behavior, set `C_MIN_HP_LENGTH=0` in `Config.hpp` before compiling.
+```
 
 
 ### Training
@@ -98,3 +122,25 @@ k1.0 2.0 99
 3 U -1 19 19
 4 C -1 18 18
 ```
+
+#### ❗️ Discrepancies from CONTRAfold-SE code
+
+This code has been modified in two ways that means its output, even using the CONTRAfold parameters, will differ from the CONTRAfold codebase here and the CONTRAfold-SE codebase here.
+
+1. A bug was fixed in the multiloop traceback `InferenceEngine.ipp` which was first identified by He Zhang (Oregon State). 
+
+2. The minimum allowable hairpin size was increased from `0` to `3` to prevent structure predictions with `(())` hairpins. To revert back to the original CONTRAfold behavior, set `C_MIN_HP_LENGTH=0` in `Config.hpp` before compiling.
+
+Example Hammerhead Ribozyme sequence: `CGCUGUCUGUACUUGUAUCAGUACACUGACGAGUCCCUAAAGGACGAAACAGCG`
+
+contrafold predict hhr.bpseq 
+
+
+CONTRAfold v2.02: 
+CONTRAfold-SE:
+EternaFold code, C_MIN_HP_LENGTH=0:
+EternaFold code, C_MIN_HP_LENGTH=3:
+
+
+
+
