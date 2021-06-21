@@ -132,7 +132,7 @@ CONTRAfold (v2_02):
 
 LinearFold-C:
 ((((((.((((((......)))))).......((((.....))))...))))))
--6.77342
+-6.77346
 ```
 
 CONTRAfold (v2_02) and LinearPartition-C free energies are known to differ. Fixing multiloop bug in CONTRAfold v2_02 brings free energy to -6.83585, but that still does not match LinearPartition-C free energy.
