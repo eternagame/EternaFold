@@ -1103,6 +1103,11 @@ void ComputationEngine<RealT>::ComputeFunctionAndGradientSE(std::vector<RealT> &
 
     // compute gradient
     if (need_gradient){
+
+        //////////////////////////////////////////////
+        /////// RIBOSWITCH no ligand gradient ////////
+        //////////////////////////////////////////////
+
         if (sstruct.HasKD()){ // HKWS ed.
         const std::vector<double> &kd_data = sstruct.GetKdData(); // list of log_kd_no_lig, log_kd_w_lig, ligand_bonus
         RealT log_kd_no_lig = kd_data[0] - 0.72; // 0.72 taken as min kd value in ribologic dataset
@@ -1132,54 +1137,58 @@ void ComputationEngine<RealT>::ComputeFunctionAndGradientSE(std::vector<RealT> &
         // std::cout << "pred_kd_no_lig" << pred_kd_no_lig << std::endl;
         // std::cout << "log_kd_no_lig" << log_kd_no_lig << std::endl;
         
-        if (options.GetBoolValue("train_with_ligand_data"))
-        {
-        RealT pred_kd_w_lig = log(exp(unconditional_score)+ligand_bonus*exp(conditional_score2))
-                              -log(exp(conditional_score)+ligand_bonus*exp(conditional_score3))
-                               - unconditional_score_ms2_ref + conditional_score_ms2_ref;
 
-        RealT prefactor_1 = exp(unconditional_score)/(exp(unconditional_score)+ligand_bonus*exp(conditional_score2));
+        //////////////////////////////////////////////
+        /////// RIBOSWITCH with ligand gradient //////
+        //////////////////////////////////////////////
 
-        RealT prefactor_2 = (ligand_bonus*exp(conditional_score2))/(exp(unconditional_score)+ligand_bonus*exp(conditional_score2));
+            if (options.GetBoolValue("train_with_ligand_data"))
+            {
+            RealT pred_kd_w_lig = log(exp(unconditional_score)+ligand_bonus*exp(conditional_score2))
+                                  -log(exp(conditional_score)+ligand_bonus*exp(conditional_score3))
+                                   - unconditional_score_ms2_ref + conditional_score_ms2_ref;
 
-        RealT prefactor_3 = exp(conditional_score)/(exp(conditional_score)+ligand_bonus*exp(conditional_score3));
+            RealT prefactor_1 = exp(unconditional_score)/(exp(unconditional_score)+ligand_bonus*exp(conditional_score2));
 
-        RealT prefactor_4 = (ligand_bonus*exp(conditional_score3))/(exp(conditional_score)+ligand_bonus*exp(conditional_score3));
+            RealT prefactor_2 = (ligand_bonus*exp(conditional_score2))/(exp(unconditional_score)+ligand_bonus*exp(conditional_score2));
 
-        // std::cout << "unconditional_score" << unconditional_score << std::endl;
-        // std::cout << "conditional_score  " << conditional_score   << std::endl;
-        // std::cout << "conditional_score2 " << conditional_score2  << std::endl;
-        // std::cout << "conditional_score3 " << conditional_score3  << std::endl;
-        // std::cout << "prefactor_1        " << prefactor_1         << std::endl;
-        // std::cout << "prefactor_2        " << prefactor_2         << std::endl;
-        // std::cout << "prefactor_3        " << prefactor_3         << std::endl;
-        // std::cout << "prefactor_4        " << prefactor_4         << std::endl;
+            RealT prefactor_3 = exp(conditional_score)/(exp(conditional_score)+ligand_bonus*exp(conditional_score3));
 
-        // std::cout << "pred_kd_no_lig" << pred_kd_no_lig << std::endl;
-        // std::cout << "log_kd_no_lig" << log_kd_no_lig << std::endl;
-        // std::cout << "pred_kd_w_lig" << pred_kd_w_lig << std::endl;
-        // std::cout << "log_kd_w_lig" << log_kd_w_lig << std::endl;
+            RealT prefactor_4 = (ligand_bonus*exp(conditional_score3))/(exp(conditional_score)+ligand_bonus*exp(conditional_score3));
 
-              for(size_t i = 0; i < result.size(); i++){
+            // std::cout << "unconditional_score" << unconditional_score << std::endl;
+            // std::cout << "conditional_score  " << conditional_score   << std::endl;
+            // std::cout << "conditional_score2 " << conditional_score2  << std::endl;
+            // std::cout << "conditional_score3 " << conditional_score3  << std::endl;
+            // std::cout << "prefactor_1        " << prefactor_1         << std::endl;
+            // std::cout << "prefactor_2        " << prefactor_2         << std::endl;
+            // std::cout << "prefactor_3        " << prefactor_3         << std::endl;
+            // std::cout << "prefactor_4        " << prefactor_4         << std::endl;
 
-                // implemented with lig/kd multiplier because entire `result` vector will get multiplied at end by shared.kd_hyperparam_data
+            // std::cout << "pred_kd_no_lig" << pred_kd_no_lig << std::endl;
+            // std::cout << "log_kd_no_lig" << log_kd_no_lig << std::endl;
+            // std::cout << "pred_kd_w_lig" << pred_kd_w_lig << std::endl;
+            // std::cout << "log_kd_w_lig" << log_kd_w_lig << std::endl;
 
-                result[i] += RealT(shared.lig_hyperparam_data)/RealT(shared.kd_hyperparam_data)*(pred_kd_w_lig - log_kd_w_lig)*
-                  (prefactor_1 * unconditional_counts[i]
-                 + prefactor_2 * conditional_counts2[i]
-                 - prefactor_3 * conditional_counts[i] 
-                 - prefactor_4 * conditional_counts3[i]
-                 - unconditional_counts_ms2_ref[i] + conditional_counts_ms2_ref[i]);
-      }
-        }
+                for(size_t i = 0; i < result.size(); i++){
 
-    }
-        else //structural data
-{
+                    // implemented with lig/kd multiplier because entire `result` vector will get multiplied at end by shared.kd_hyperparam_data
+
+                    result[i] += RealT(shared.lig_hyperparam_data)/RealT(shared.kd_hyperparam_data)*(pred_kd_w_lig - log_kd_w_lig)*
+                      (prefactor_1 * unconditional_counts[i]
+                     + prefactor_2 * conditional_counts2[i]
+                     - prefactor_3 * conditional_counts[i] 
+                     - prefactor_4 * conditional_counts3[i]
+                     - unconditional_counts_ms2_ref[i] + conditional_counts_ms2_ref[i]);
+                }
+            } /// END train_with_ligand_data
+        }  //// END (sstruct.HasKD())
+    else //structural data
+    {
     result = unconditional_counts - conditional_counts;  
      //std::cout << "struct" << unconditional_score << " " << conditional_score << std::endl;
-}      
-    } 
+    }      
+    }
 
     RealT function_value = 0;
 
