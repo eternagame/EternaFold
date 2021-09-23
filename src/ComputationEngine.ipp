@@ -1003,11 +1003,13 @@ void ComputationEngine<RealT>::ComputeFunctionAndGradientSE(std::vector<RealT> &
         // we have evidence because we need it to normalize the Contrafold
         // potentials to get log P(d | x) as the log-partition function of Q(y).
         unconditional_score = inference_engine.ComputeLogPartitionCoefficient();
-        //std::cout << "line 966 uncond score " << unconditional_score << std::endl;
+        //std::cout << "line 1006 uncond score " << unconditional_score << std::endl;
         if (need_gradient)
         {
             inference_engine.ComputeOutside();
             unconditional_counts = inference_engine.ComputeFeatureCountExpectations();
+           // std::cout << "line 1011 uncond counts " << unconditional_counts << std::endl;
+
         }
     }
 
@@ -1090,10 +1092,15 @@ void ComputationEngine<RealT>::ComputeFunctionAndGradientSE(std::vector<RealT> &
 
             inference_engine.ComputeInside();
             conditional_score = inference_engine.ComputeLogPartitionCoefficient();
+
+            //std::cout << "line 1096 cond score " << conditional_score << std::endl;
+
             if (need_gradient)
             {
                 inference_engine.ComputeOutside();
                 conditional_counts = inference_engine.ComputeFeatureCountExpectations();
+                            //std::cout << "line 1096 cond counts " << conditional_counts << std::endl;
+
             }
         }
     }
@@ -1108,7 +1115,9 @@ void ComputationEngine<RealT>::ComputeFunctionAndGradientSE(std::vector<RealT> &
         /////// RIBOSWITCH no ligand gradient ////////
         //////////////////////////////////////////////
 
-        if (sstruct.HasKD()){ // HKWS ed.
+        if (sstruct.HasKD())
+
+        { // HKWS ed.
         const std::vector<double> &kd_data = sstruct.GetKdData(); // list of log_kd_no_lig, log_kd_w_lig, ligand_bonus
         RealT log_kd_no_lig = kd_data[0] - 0.72; // 0.72 taken as min kd value in ribologic dataset
         RealT log_kd_w_lig = kd_data[1] - 0.72; // 0.72 taken as min kd value in ribologic dataset
@@ -1129,8 +1138,7 @@ void ComputationEngine<RealT>::ComputeFunctionAndGradientSE(std::vector<RealT> &
             else if (HKWS_gradient_mode == 2){
         result[i] *= pow(pow((pred_kd_no_lig - log_kd_no_lig),2),0.5); //equals mode=0 from scratch on test, but no good
             }
-        }
-
+        } // finish gradient 
         //junk for debugging
         // std::cout << "unconditional_score" << unconditional_score << std::endl;
         // std::cout << "conditional_score  " << conditional_score   << std::endl;
@@ -1149,11 +1157,8 @@ void ComputationEngine<RealT>::ComputeFunctionAndGradientSE(std::vector<RealT> &
                                    - unconditional_score_ms2_ref + conditional_score_ms2_ref;
 
             RealT prefactor_1 = exp(unconditional_score)/(exp(unconditional_score)+ligand_bonus*exp(conditional_score2));
-
             RealT prefactor_2 = (ligand_bonus*exp(conditional_score2))/(exp(unconditional_score)+ligand_bonus*exp(conditional_score2));
-
             RealT prefactor_3 = exp(conditional_score)/(exp(conditional_score)+ligand_bonus*exp(conditional_score3));
-
             RealT prefactor_4 = (ligand_bonus*exp(conditional_score3))/(exp(conditional_score)+ligand_bonus*exp(conditional_score3));
 
             // std::cout << "unconditional_score" << unconditional_score << std::endl;
@@ -1183,6 +1188,23 @@ void ComputationEngine<RealT>::ComputeFunctionAndGradientSE(std::vector<RealT> &
                 }
             } /// END train_with_ligand_data
         }  //// END (sstruct.HasKD())
+
+    else if (sstruct.HasLogPStruct()){
+        /////////////////////////////////////////////
+        /////// P(HAIRPIN) ARRAY MELT gradient //////
+        /////////////////////////////////////////////
+
+        const std::vector<double> &log_p_data = sstruct.GetLogPData(); // keeping as list in case of other values to pass
+        RealT log_p = log_p_data[0]; 
+
+        result = unconditional_counts - conditional_counts; // not sure if it should be something more? 
+
+        for(size_t i = 0; i < result.size(); i++){
+                result[i] *= (log_p - conditional_score + unconditional_score);
+        } // finish gradient 
+        //////
+
+    }
     else //structural data
     {
     result = unconditional_counts - conditional_counts;  
@@ -1266,6 +1288,18 @@ void ComputationEngine<RealT>::ComputeFunctionAndGradientSE(std::vector<RealT> &
         }
 
     function_value += function_value_nonevidence;
+
+    }
+    else if (sstruct.HasLogPStruct()){
+        // Jul 2021 Calculate loss function for log P struct
+                // JUL 2021 Calculate gradient for hairpin melt data
+        //std::cout << "Am in HasLogPStruct, calculating function" << std::endl;
+
+        const std::vector<double> &log_p_data = sstruct.GetLogPData(); // keeping as list in case of other values to pass
+        RealT log_p = log_p_data[0]; 
+
+        function_value_nonevidence = pow((log_p - conditional_score + unconditional_score),2); 
+        function_value += function_value_nonevidence;
 
     }
     else{

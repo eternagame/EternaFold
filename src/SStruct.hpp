@@ -30,9 +30,11 @@ class SStruct
     std::vector<int> mapping2;
     std::vector<int> mapping3;
     std::vector<double> kd_data;
+    std::vector<double> log_p_data;
     std::vector<std::vector<double> > unpaired_potentials;
     bool has_struct;
     bool has_kd;
+    bool has_log_p_struct;
     bool has_evidence;
     int num_data_sources;
     std::vector<bool> which_evidence;
@@ -47,6 +49,7 @@ class SStruct
     void LoadBPP2SEQ(const std::string &filename);
     void LoadBPP2TSEQ(const std::string &filename);
     void LoadBPSEQR(const std::string &filename);
+    void LoadBPSEQ_hp(const std::string &filename);
 
     // perform standard character conversions for RNA sequence and structures
     std::string FilterSequence(std::string sequence) const;
@@ -116,6 +119,8 @@ public:
     const std::vector<int> &GetMapping3() const { return mapping3; }
 
     const std::vector<double> &GetKdData() const { return kd_data; }
+    const std::vector<double> &GetLogPData() const { return log_p_data; }
+
     const std::vector<double> &GetUnpairedPotentials(int which) const { return unpaired_potentials[which]; }
     const std::vector<double> &GetPairedPotentials(int which) const { return unpaired_potentials[which]; }
     // Note: paired_potentials and unpaired_potentials arrays are the same here; the logic to handle them differently is in InferenceEngine
@@ -123,6 +128,7 @@ public:
     int GetNumSequences() const { return int(sequences.size()); }
     bool HasStruct() const { return has_struct; }
     bool HasKD() const { return has_kd; }
+    bool HasLogPStruct() const { return has_log_p_struct; }
     bool HasEvidence(int which_data) const { return which_evidence[which_data]; }
     bool HasEvidence() const { return has_evidence; }
     const std::string ReturnMappingAsParens();

@@ -153,6 +153,7 @@ const double MM_SMOOTHING = 1.0;
 #define PARAMS_EXTERNAL_LENGTH                     1
 */
 
+
 #define PARAMS_BASE_PAIR                           1
 #define PARAMS_BASE_PAIR_DIST                      0
 #define PARAMS_TERMINAL_MISMATCH                   1
@@ -179,32 +180,34 @@ const double MM_SMOOTHING = 1.0;
 #define PARAMS_EXTERNAL_LENGTH                     1
 #define PARAMS_EVIDENCE                            1  
 
-/*
-#define PARAMS_BASE_PAIR                           1
-#define PARAMS_BASE_PAIR_DIST                      0
-#define PARAMS_TERMINAL_MISMATCH                   0
-#define PARAMS_HAIRPIN_LENGTH                      0
-#define PARAMS_HAIRPIN_3_NUCLEOTIDES               0
-#define PARAMS_HAIRPIN_4_NUCLEOTIDES               0
-#define PARAMS_HELIX_LENGTH                        0
-#define PARAMS_ISOLATED_BASE_PAIR                  0
-#define PARAMS_INTERNAL_EXPLICIT                   0
-#define PARAMS_BULGE_LENGTH                        0
-#define PARAMS_INTERNAL_LENGTH                     0
-#define PARAMS_INTERNAL_SYMMETRY                   0
-#define PARAMS_INTERNAL_ASYMMETRY                  0
-#define PARAMS_BULGE_0x1_NUCLEOTIDES               0
-#define PARAMS_BULGE_0x2_NUCLEOTIDES               0
-#define PARAMS_BULGE_0x3_NUCLEOTIDES               0
-#define PARAMS_INTERNAL_1x1_NUCLEOTIDES            0
-#define PARAMS_INTERNAL_1x2_NUCLEOTIDES            0
-#define PARAMS_INTERNAL_2x2_NUCLEOTIDES            0
-#define PARAMS_HELIX_STACKING                      0
-#define PARAMS_HELIX_CLOSING                       0
-#define PARAMS_MULTI_LENGTH                        0
-#define PARAMS_DANGLE                              0
-#define PARAMS_EXTERNAL_LENGTH                     0
-*/
+
+
+// #define PARAMS_BASE_PAIR                           1
+// #define PARAMS_BASE_PAIR_DIST                      0
+// #define PARAMS_TERMINAL_MISMATCH                   1
+// #define PARAMS_HAIRPIN_LENGTH                      0
+// #define PARAMS_HAIRPIN_3_NUCLEOTIDES               0
+// #define PARAMS_HAIRPIN_4_NUCLEOTIDES               0
+// #define PARAMS_HELIX_LENGTH                        0
+// #define PARAMS_ISOLATED_BASE_PAIR                  0
+// #define PARAMS_INTERNAL_EXPLICIT                   1
+// #define PARAMS_BULGE_LENGTH                        0
+// #define PARAMS_INTERNAL_LENGTH                     0
+// #define PARAMS_INTERNAL_SYMMETRY                   0
+// #define PARAMS_INTERNAL_ASYMMETRY                  0
+// #define PARAMS_BULGE_0x1_NUCLEOTIDES               0
+// #define PARAMS_BULGE_0x2_NUCLEOTIDES               0
+// #define PARAMS_BULGE_0x3_NUCLEOTIDES               0
+// #define PARAMS_INTERNAL_1x1_NUCLEOTIDES            1
+// #define PARAMS_INTERNAL_1x2_NUCLEOTIDES            0
+// #define PARAMS_INTERNAL_2x2_NUCLEOTIDES            0
+// #define PARAMS_HELIX_STACKING                      1
+// #define PARAMS_HELIX_CLOSING                       1
+// #define PARAMS_MULTI_LENGTH                        0
+// #define PARAMS_DANGLE                              1
+// #define PARAMS_EXTERNAL_LENGTH                     0
+// #define PARAMS_EVIDENCE                            1  
+
 
 //////////////////////////////////////////////////////////////////////
 // (F) Miscellaneous model constants

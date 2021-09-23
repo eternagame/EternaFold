@@ -12,6 +12,7 @@ enum FileFormat
     FileFormat_BPP2TSEQ,
     FileFormat_RAW,
     FileFormat_BPSEQR,
+    FileFormat_BPSEQ_hp,
     FileFormat_UNKNOWN
 };                  
 
@@ -32,6 +33,7 @@ SStruct::SStruct()
 { 
     has_struct = false;
     has_kd = false;
+    has_log_p_struct = false;
     has_evidence = false;
     num_data_sources = 1;
 }
@@ -47,6 +49,7 @@ SStruct::SStruct(const std::string &filename, const int num_data_sources)
    has_struct = false;
    has_kd = false;
    has_evidence = false;
+   has_log_p_struct = false;
    this->num_data_sources = num_data_sources;
    Load(filename);
 }
@@ -61,6 +64,7 @@ SStruct::SStruct(const std::string &filename)
 {
    has_struct = false;
    has_kd = false;
+   has_log_p_struct = false;
    has_evidence = false;
    Load(filename);
    num_data_sources = 1;
@@ -84,6 +88,8 @@ void SStruct::Load(const std::string &filename)
         case FileFormat_BPP2TSEQ: LoadBPP2TSEQ(filename); break;
         case FileFormat_BPP2SEQ: LoadBPP2SEQ(filename); break;
         case FileFormat_BPSEQR: LoadBPSEQR(filename);break;
+        case FileFormat_BPSEQ_hp: LoadBPSEQ_hp(filename);break;
+
         default: Error("Unable to determine file type.");
     }
 
@@ -124,6 +130,8 @@ int SStruct::AnalyzeFormat(const std::string &filename) const
 
     else if (s[0] == 'k')
         format = FileFormat_BPSEQR;
+    else if (s[0] == 'n')
+        format = FileFormat_BPSEQ_hp;
     else
     {
         std::istringstream iss(s);
@@ -494,6 +502,80 @@ void SStruct::LoadBPSEQR(const std::string &filename)
     has_evidence = false;
 }
 
+//////////////////////////////////////////////////////////////////////
+// SStruct::LoadBPSEQ_hp() HKWS, July 2021
+//
+// Create object from BPSEQ file with one line at top, which contains one value reflecting prob(Struct) from melt data.
+
+//////////////////////////////////////////////////////////////////////
+
+void SStruct::LoadBPSEQ_hp(const std::string &filename)
+{
+    // clear any previous data
+    std::vector<std::string>().swap(names);
+    std::vector<std::string>().swap(sequences);
+    std::vector<int>().swap(mapping);
+    std::vector<double>().swap(log_p_data);
+    std::vector<std::vector<double> >().swap(unpaired_potentials);
+    std::vector<bool>().swap(which_evidence);
+
+    // initialize
+    names.push_back(filename);
+    sequences.push_back("@");
+    mapping.push_back(UNKNOWN);
+
+    // open file
+    std::ifstream data(filename.c_str());
+    if (data.fail()) Error("Unable to open input file: %s", filename.c_str());
+
+    // process file
+    std::string token;
+    int row = 0;
+    double num = 0.0;
+    data >> token;
+    if (!ConvertToNumber(token.substr(1), num)) Error("Could not read log_p_struct from %s", filename.c_str());
+    log_p_data.push_back(num);
+
+    //std::cout << "loading p struct data " << log_p_data << std::endl;
+    
+    while (data >> token)
+    {
+        // read row 
+        int index = 0;
+        if (!ConvertToNumber(token, index)) Error("Could not read row number: %s", filename.c_str());
+        if (index <= 0) Error("Row numbers must be positive: %s", filename.c_str());
+        if (index != row+1) Error("Rows of BPSEQ file must occur in increasing order: %s", filename.c_str());
+        row = index;
+
+        // read sequence letter
+        if (!(data >> token)) Error("Expected sequence letter after row number: %s", filename.c_str());
+        if (token.length() != 1) Error("Expected sequence letter after row number: %s", filename.c_str());      
+        char ch = token[0];
+
+        // read mapping
+        int maps_to = 0;
+        if (!(data >> token)) Error("Expected mapping after sequence letter: %s", filename.c_str());
+        if (!ConvertToNumber(token, maps_to)) Error("Could not read matching row number: %s", filename.c_str());
+        if (maps_to < -1) Error("Matching row numbers must be greater than or equal to -1: %s", filename.c_str());
+
+        sequences.back().push_back(ch);
+        mapping.push_back(maps_to);
+    }
+    
+    has_log_p_struct = true;
+    has_struct = true;
+
+    //std::cout << "mapping" <<std::endl;
+    //std::cout << mapping <<std::endl;
+
+    // initialize unknown unpairedness potentials // probably don't need these for non-structure-probing data? 
+    for (int i = 0; i < num_data_sources; i++) {
+        unpaired_potentials.push_back(std::vector<double>(sequences[0].length(), UNKNOWN_POTENTIAL));
+    }
+    which_evidence.resize(num_data_sources,false);
+    has_evidence = false;
+}
+
 ////////////////////////////////////////////////////////////////////////////
 // SStruct::LoadAPI()
 //
@@ -736,9 +818,11 @@ SStruct::SStruct(const SStruct &rhs) :
     mapping3(rhs.mapping3),
 
     kd_data(rhs.kd_data),
+    log_p_data(rhs.log_p_data),
     unpaired_potentials(rhs.unpaired_potentials),
     has_struct(rhs.has_struct),
     has_kd(rhs.has_kd),
+    has_log_p_struct(rhs.has_log_p_struct),
     has_evidence(rhs.has_evidence),
     num_data_sources(rhs.num_data_sources),
     which_evidence(rhs.which_evidence)
@@ -770,10 +854,12 @@ const SStruct &SStruct::operator=(const SStruct &rhs)
         mapping3 = rhs.mapping3;
 
         kd_data = rhs.kd_data;
+        log_p_data = rhs.log_p_data;
         unpaired_potentials = rhs.unpaired_potentials;
         which_evidence = rhs.which_evidence;
         has_struct = rhs.has_struct;
         has_kd = rhs.has_kd;
+        has_log_p_struct = rhs.has_log_p_struct;
         has_evidence = rhs.has_evidence;
         num_data_sources = rhs.num_data_sources;
     }
