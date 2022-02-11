@@ -11,6 +11,8 @@ EternaFold is possible thanks to [CONTRAfold-SE](https://github.com/csfoo/contra
 Clone the repository and run `make` in `src` to compile.
 Multithreaded version: run `make multi` in `src`.
 
+Compiled with gcc 4.8.5 and openmpi 2.0.2. 
+
 See instructions in [README_LinearFold-E_patch.md](README_LinearFold-E_patch.md) for using EternaFold parameters with LinearFold and LinearPartition algorithms.
 
 ### Prediction
