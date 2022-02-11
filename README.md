@@ -34,18 +34,23 @@ CGCUGUCUGUACUUGUAUCAGUACACUGACGAGUCCCUAAAGGACGAAACAGCG
 (((((((((((((......))))))..)....((((.....))))...))))))
 ```
 
-Predict the ensemble free energy:
+#### Ensemble free energy prediction
 
 ```
 $ ./src/contrafold predict test.seq --params parameters/EternaFoldParams.v1 --partition
 ```
 
-Output:
+Output (log partition coefficient)
 ```
 Training mode: 
 Use constraints: 0
 Use evidence: 0
 Log partition coefficient for "test.seq": 13.7489
+```
+#### Base-pairing probability prediction
+
+```
+./src/contrafold predict <infile>.in <outfile>.posteriors
 ```
 
 Please see the documentation of [CONTRAfold](http://contra.stanford.edu/contrafold/manual_v2_02.pdf) for further information on parameters and usage. See below for documented discrepancies (besides parameters) from CONTRAfold codebases.
