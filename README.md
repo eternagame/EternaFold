@@ -20,7 +20,7 @@ See instructions in [README_LinearFold-E_patch.md](README_LinearFold-E_patch.md)
 #### Single-structure prediction
 Predict the MEA structure of example test sequence (Hammerhead ribozyme), using the EternaFold parameters:
 
-`contrafold predict test.seq --params parameters/EternaFoldParams.v1`
+`./src/contrafold predict test.seq --params parameters/EternaFoldParams.v1`
 
 Output:
 ```
@@ -33,6 +33,46 @@ CGCUGUCUGUACUUGUAUCAGUACACUGACGAGUCCCUAAAGGACGAAACAGCG
 >structure
 (((((((((((((......))))))..)....((((.....))))...))))))
 ```
+
+#### SHAPE-directed secondary structure prediction
+
+Predict the maximum-likelihood structure of the given sequence, using SHAPE likelihood potentials learned from Cloud Lab SHAPE MAP-seq experiments (Wayment-Steele et. al, 2022).
+
+Predicted structure of example construct without incorporating SHAPE data:
+```
+./src/contrafold predict test_SHAPE.seq --params parameters/EternaFoldParams.v1
+```
+Output:
+``` 
+Training mode: 
+Use constraints: 0
+Use evidence: 0
+Predicting using MEA estimator.
+>test_SHAPE.seq
+UGUACCGGAAGGUGCGAAUCUUCCG
+>structure
+.....((((((((....))))))))
+```
+
+Alternate structure is predicted upon incorporating SHAPE data in `test_SHAPE.bpseq`:
+
+```
+./src/contrafold predict test_SHAPE.bpseq --evidence --numdatasources 1 --kappa 0.1 --params parameters/EternaFoldParams_PLUS_POTENTIALS.v1 
+```
+
+Output:
+```
+Training mode: 
+Use constraints: 0
+Use evidence: 1
+Predicting using MEA estimator.
+>test_SHAPE.bpseq
+UGUACCGGAAGGUGCGAAUCUUCCG
+>structure
+((((((....)))))).........
+``` 
+
+
 
 #### Ensemble free energy prediction
 
@@ -50,8 +90,73 @@ Log partition coefficient for "test.seq": 13.7489
 #### Base-pairing probability prediction
 
 ```
-./src/contrafold predict <infile>.in <outfile>.posteriors
+./src/contrafold predict test.seq --params parameters/EternaFoldParams.v1 --posteriors 0.00001 bps.txt
 ```
+
+Base-pairing probabilities are output to `bps.txt`:
+```
+1 C 9:3.55095e-05 28:0.000274751 31:0.0050855 33:0.000420935 46:0.00100593 52:0.000674974 54:0.815493
+2 G 7:0.000290278 10:0.000150796 16:6.48946e-05 22:0.000711706 24:6.9622e-05 26:0.000379153 27:0.000149917 30:0.005751
+06 34:0.00134091 35:0.00017805 45:0.000245854 50:0.000512436 53:0.913047
+3 C 9:0.000150353 15:6.90445e-05 21:0.000968743 28:0.00245682 31:0.00417261 33:0.00229046 46:0.000703465 52:0.91348 54
+:0.000561778
+4 U 20:0.00104566 25:0.00225947 28:0.000790812 29:0.000620939 31:0.0282994 32:0.00417285 41:2.64421e-05 46:0.000350788
+ 47:0.00012951 48:0.000177715 49:0.000466242 51:0.825096 52:8.55103e-05 54:0.000171393
+5 G 12:0.000356127 19:0.00100131 24:0.00327509 26:0.00645875 27:0.000742048 30:0.189649 45:0.00133716 50:0.74545 53:0.
+000533715
+6 U 11:0.00030157 17:0.000271142 23:0.00321799 25:0.0050542 28:0.0026176 29:0.230025 31:0.000505041 32:0.0156585 43:0.
+000190485 44:0.00204912 46:0.00040755 47:0.0307307 48:0.0032191 49:0.561613 52:0.00014478
+...
+```
+
+#### Sample structures
+
+Stochastically samples structures from the underlying distribution. 
+```
+./src/contrafold sample test.seq --params parameters/EternaFoldParams.v1 --nsamples 10
+```
+
+Output
+```
+Training mode: 
+Use constraints: 0
+Use evidence: 0
+(((((((..((((......)))).......))((((.....))))....)))))
+..(.(((.((....(((....))))).)))).((((.....)))).........
+................................((((.....)))).........
+........(((((......)))))........((((.....)))).........
+.(((((.((((((......)))))).......((((.....))))...))))).
+.(((((..((((........))))........((((.....))))...))))).
+.((((((.(((((......)))))........((((.....)))))..))))).
+.(((((.((((((......)))))).......((((.....))))...))))).
+....(((.(((((......)))))...)))..((((.....)))).........
+....(((((((((......))))))..)))..((((.....)))).........
+```
+
+`sample` can be used in conjunction with SHAPE data to sample SHAPE-reweighted distribution:
+
+```
+./src/contrafold sample test_SHAPE.bpseq --params parameters/EternaFoldParams_PLUS_POTENTIALS.v1 --nsamples 10 --evidence --numdatasources 1 --kappa 0.1
+```
+
+Output:
+```
+Training mode: 
+Use constraints: 0
+Use evidence: 1
+.(((((....)))))..........
+((((((....)))))).........
+((((((....)))))).........
+((((((....)))))).........
+((((((....)))))).........
+.(((((....)))))..........
+.(.(((....))).)..........
+.(((((....)))))..........
+...(((....)))............
+.(((((....)))))..........
+```
+
+
 
 Please see the documentation of [CONTRAfold](http://contra.stanford.edu/contrafold/manual_v2_02.pdf) for further information on parameters and usage. See below for documented discrepancies (besides parameters) from CONTRAfold codebases.
 
