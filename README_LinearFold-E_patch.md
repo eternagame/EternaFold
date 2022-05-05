@@ -43,14 +43,7 @@ make
 cd ..
 ```
 
-3. Add the following lines to your Arnie file:
-
-```
-linearfold: /path/to/LinearFold/bin
-linearpartition: /path/to/LinearPartition/bin
-```
-
-4. To check LinearFold executables are properly built:
+5. To check LinearFold executables are properly built:
 
 ```
 $ echo CGCUGUCUGUACUUGUAUCAGUACACUGACGAGUCCCUAAAGGACGAAACAGCG | ./bin/linearfold_v
@@ -69,7 +62,7 @@ CGCUGUCUGUACUUGUAUCAGUACACUGACGAGUCCCUAAAGGACGAAACAGCG
 ((((((.((((((......)))))).......((((.....))))...)))))) (10.94)
 ```
 
-5. To check LinearPartition executables are properly built:
+6. To check LinearPartition executables are properly built:
 
 ```
 $ echo CGCUGUCUGUACUUGUAUCAGUACACUGACGAGUCCCUAAAGGACGAAACAGCG | ./bin/linearpartition_v
@@ -88,7 +81,18 @@ LinearFold returns the minimum free energy structure (MFE) and its free energy (
 
 LinearPartition calculates dG(ensemble), again positive numbers from LinearPartition-C and LinearPartition-E.
 
-6. To check LinearFold and LinearPartition are correctly linked to Arnie:
+CONTRAfold (v2_02) and LinearPartition-C free energies are known to differ. Fixing multiloop bug in CONTRAfold v2_02 brings free energy to -6.83585, but that still does not match LinearPartition-C free energy.
+
+### Linking to Arnie python wrapper
+
+1. Add the following lines to your Arnie file:
+
+```
+linearfold: /path/to/LinearFold/bin
+linearpartition: /path/to/LinearPartition/bin
+```
+
+2. To check LinearFold and LinearPartition are correctly linked to Arnie:
 
 ```python
 from arnie.mfe import mfe
@@ -134,6 +138,3 @@ LinearFold-C:
 ((((((.((((((......)))))).......((((.....))))...))))))
 -6.77346
 ```
-
-CONTRAfold (v2_02) and LinearPartition-C free energies are known to differ. Fixing multiloop bug in CONTRAfold v2_02 brings free energy to -6.83585, but that still does not match LinearPartition-C free energy.
-
