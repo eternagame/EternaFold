@@ -6,6 +6,9 @@ Its training data comes from diverse high-throughput experimental crowdsourced d
 
 EternaFold is possible thanks to [CONTRAfold-SE](https://github.com/csfoo/contrafold-se) (C.-S. Foo, C. Pop).
 
+For scripts and datasets pertaining to benchmarking EternaFold on secondary structure prediction algorithms, see the [EternaBench](https://github.com/eternagame/EternaBench) repo.
+
+
 ### Installation
 
 Clone the repository and run `make` in `src` to compile.
