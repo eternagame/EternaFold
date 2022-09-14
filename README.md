@@ -11,7 +11,9 @@ For scripts and datasets pertaining to benchmarking EternaFold on secondary stru
 If you use EternaFold in your research, please cite
 
 ```
-H.K. Wayment-Steele, W. Kladwang, A.I. Strom, J. Lee, A. Treuille, A. Becka, Eterna Participants, R. Das. (2022). RNA secondary structure packages ranked and improved by high-throughput experiments. Nature Methods (In press).
+H.K. Wayment-Steele, W. Kladwang, A.I. Strom, J. Lee, A. Treuille, A. Becka,
+Eterna Participants, R. Das. (2022). RNA secondary structure packages ranked
+and improved by high-throughput experiments. Nature Methods (In press).
 ```
 
 ### Installation
