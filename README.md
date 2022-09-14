@@ -6,8 +6,13 @@ Its training data comes from diverse high-throughput experimental crowdsourced d
 
 EternaFold is possible thanks to [CONTRAfold-SE](https://github.com/csfoo/contrafold-se) (C.-S. Foo, C. Pop).
 
-For scripts and datasets pertaining to benchmarking EternaFold on secondary structure prediction algorithms, see the [EternaBench](https://github.com/eternagame/EternaBench) repo.
+For scripts and datasets pertaining to benchmarking EternaFold on secondary structure prediction tasks, see the [EternaBench](https://github.com/eternagame/EternaBench) repo.
 
+If you use EternaFold in your research, please cite
+
+```
+H.K. Wayment-Steele, W. Kladwang, A.I. Strom, J. Lee, A. Treuille, A. Becka, Eterna Participants, R. Das. (2022). RNA secondary structure packages ranked and improved by high-throughput experiments. Nature Methods (In press).
+```
 
 ### Installation
 
