@@ -10,12 +10,12 @@ EternaFold is possible thanks to [CONTRAfold-SE](https://github.com/csfoo/contra
 
 For scripts and datasets pertaining to benchmarking EternaFold on secondary structure prediction tasks, see the [EternaBench](https://github.com/eternagame/EternaBench) repo.
 
-If you use EternaFold in your research, please cite
+If you use EternaFold in your research, please cite [the paper](https://www.nature.com/articles/s41592-022-01605-0):
 
 ```
 H.K. Wayment-Steele, W. Kladwang, A.I. Strom, J. Lee, A. Treuille, A. Becka,
 Eterna Participants, R. Das. (2022). RNA secondary structure packages ranked
-and improved by high-throughput experiments. Nature Methods (In press).
+and improved by high-throughput experiments. Nature Methods 19, 1234–1242.
 ```
 
 ### Installation
