@@ -25,6 +25,8 @@ Multithreaded version: run `make multi` in `src`.
 
 Compiled with gcc 4.8.5 and openmpi 2.0.2. 
 
+Note: The Bioconda eternafold=1.3.1 binary may hang on some systems due to an MPI-linked build; if this occurs, compile EternaFold from source instead.
+
 See instructions in [README_LinearFold-E_patch.md](README_LinearFold-E_patch.md) for using EternaFold parameters with LinearFold and LinearPartition algorithms.
 
 ### Prediction
