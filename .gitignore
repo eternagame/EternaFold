@@ -1,6 +1,11 @@
 */*.o
+src/.nfs*
+.DS_STORE
 src/contrafold
 src/api_test
+src/make_coords
+src/plot_rna
+src/score_prediction
 src/optimize.*
 input_data/*
 old_input_data/*
