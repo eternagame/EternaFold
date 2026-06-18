@@ -1,22 +1,24 @@
 diff --git a/Makefile b/Makefile
-index 2c10c80..2b5ffa7 100644
+index 2c10c80..ecfe992 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -6,16 +6,17 @@
  ################################
  
  CC=g++
--DEPS=src/LinearFoldEval.cpp src/LinearFold.h src/Utils/energy_parameter.h src/Utils/feature_weight.h src/Utils/intl11.h src/Utils/intl21.h src/Utils/intl22.h src/Utils/utility_v.h src/Utils/utility.h
+-DEPS=src/LinearFoldEval.cpp src/LinearFold.h src/Utils/energy_parameter.h src/Utils/feature_weight.h src/Utils/intl11.h src/Utils/intl21.h src/Utils/intl22.h src/Utils/utility_v.h src/Utils/utility.h 
 +DEPS=src/LinearFoldEval.cpp src/LinearFold.h src/Utils/energy_parameter.h src/Utils/feature_weight.h src/Utils/feature_weight_e.h src/Utils/intl11.h src/Utils/intl21.h src/Utils/intl22.h src/Utils/utility_v.h src/Utils/utility.h
  CFLAGS=-std=c++11 -O3
  .PHONY : clean linearfold
 -objects=bin/linearfold_v bin/linearfold_c
 +objects=bin/linearfold_v bin/linearfold_c bin/linearfold_e
  
- linearfold: src/LinearFold.cpp $(DEPS)
+-linearfold: src/LinearFold.cpp $(DEPS) 
++linearfold: src/LinearFold.cpp $(DEPS)
  		chmod +x linearfold draw_circular_plot
  		mkdir -p bin
- 		$(CC) src/LinearFold.cpp $(CFLAGS) -Dlv -Dis_cube_pruning -Dis_candidate_list -o bin/linearfold_v
+-		$(CC) src/LinearFold.cpp $(CFLAGS) -Dlv -Dis_cube_pruning -Dis_candidate_list -o bin/linearfold_v 
++		$(CC) src/LinearFold.cpp $(CFLAGS) -Dlv -Dis_cube_pruning -Dis_candidate_list -o bin/linearfold_v
  		$(CC) src/LinearFold.cpp $(CFLAGS) -Dis_cube_pruning -Dis_candidate_list -o bin/linearfold_c
 +		$(CC) src/LinearFold.cpp $(CFLAGS) -Dlpe -Dis_cube_pruning -Dis_candidate_list -o bin/linearfold_e
  
@@ -25,7 +27,7 @@ index 2c10c80..2b5ffa7 100644
 \ No newline at end of file
 diff --git a/src/Utils/feature_weight_e.h b/src/Utils/feature_weight_e.h
 new file mode 100644
-index 0000000..5bbb480
+index 0000000..2cf420b
 --- /dev/null
 +++ b/src/Utils/feature_weight_e.h
 @@ -0,0 +1,36 @@

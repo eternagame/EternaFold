@@ -1,5 +1,5 @@
 diff --git a/Makefile b/Makefile
-index 49a7aca..a4c6e20 100755
+index 49a7aca..720f4bb 100755
 --- a/Makefile
 +++ b/Makefile
 @@ -6,16 +6,17 @@
@@ -13,10 +13,12 @@ index 49a7aca..a4c6e20 100755
 -objects=bin/linearpartition_v bin/linearpartition_c
 +objects=bin/linearpartition_v bin/linearpartition_c bin/linearpartition_e
  
- linearpartition: src/LinearPartition.cpp $(DEPS)
+-linearpartition: src/LinearPartition.cpp $(DEPS) 
++linearpartition: src/LinearPartition.cpp $(DEPS)
  		chmod +x linearpartition draw_bpp_plot draw_heatmap
  		mkdir -p bin
- 		$(CC) src/LinearPartition.cpp $(CFLAGS) -Dlpv -o bin/linearpartition_v
+-		$(CC) src/LinearPartition.cpp $(CFLAGS) -Dlpv -o bin/linearpartition_v 
++		$(CC) src/LinearPartition.cpp $(CFLAGS) -Dlpv -o bin/linearpartition_v
  		$(CC) src/LinearPartition.cpp $(CFLAGS) -o bin/linearpartition_c
 +		$(CC) src/LinearPartition.cpp $(CFLAGS) -Dlpe -o bin/linearpartition_e
  
@@ -25,7 +27,7 @@ index 49a7aca..a4c6e20 100755
 \ No newline at end of file
 diff --git a/src/Utils/feature_weight_e.h b/src/Utils/feature_weight_e.h
 new file mode 100644
-index 0000000..5bbb480
+index 0000000..2cf420b
 --- /dev/null
 +++ b/src/Utils/feature_weight_e.h
 @@ -0,0 +1,36 @@
@@ -67,7 +69,7 @@ index 0000000..5bbb480
 +#endif
 \ No newline at end of file
 diff --git a/src/Utils/utility.h b/src/Utils/utility.h
-index 0601a4d..a5866b1 100755
+index 0601a4d..5c96a39 100755
 --- a/src/Utils/utility.h
 +++ b/src/Utils/utility.h
 @@ -13,7 +13,11 @@

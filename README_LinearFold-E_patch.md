@@ -29,7 +29,7 @@ git reset --hard ae6507f3053573decd2e4bdae60d5a96eac87783
 
 ```
 cd LinearFold
-git apply --whitespace=fix /PATH/TO/ETERNAFOLD/LinearFold-E.patch
+git apply /PATH/TO/ETERNAFOLD/LinearFold-E.patch
 make
 cd ..
 ```
@@ -38,7 +38,7 @@ cd ..
 
 ```
 cd LinearPartition
-git apply --whitespace=fix /PATH/TO/ETERNAFOLD/LinearPartition-E.patch
+git apply /PATH/TO/ETERNAFOLD/LinearPartition-E.patch
 make
 cd ..
 ```
