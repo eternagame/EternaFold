@@ -1,8 +1,13 @@
 CXX = g++
 
+ARCH := $(shell uname -m)
 
-CXXFLAGS = -std=c++11 -O3 -mfpmath=sse -msse -msse2 -msse3 -DEVIDENCE_SR -DEVIDENCE_PARS \
--DNDEBUG -W -pipe -Wundef -Winline --param large-function-growth=100000 -Wall
+CXXFLAGS = -std=c++11 -O3 -DEVIDENCE_SR -DEVIDENCE_PARS -DNDEBUG -W -pipe -Wundef -Winline -Wall
+
+ifneq (,$(filter $(ARCH),x86_64 amd64 i386 i686))
+	CXXFLAGS += -mfpmath=sse -msse -msse2 -msse3 --param large-function-growth=100000
+endif
+
 ICCFLAGS = -O3 -xCORE-AVX-I -Wall
 
 LINKFLAGS = -lm
