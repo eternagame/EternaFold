@@ -8825,11 +8825,20 @@ std::vector<int> InferenceEngine<RealT>::PredictPairingsStochasticTraceback() co
                         roulette.add(EncodeTraceback(TB_FM_BIFURCATION, k), FM2i);
                     }
 
-                    // compute FM[i,j-1] + b
-                    if (allow_unpaired_position[j])
+                    // [traceback fix] ComputeInside()/ComputeOutside() replaced
+                    // "FM[i,j-1] + b" by SUM_zh FM1[i,zh-1] + b*(j-zh+1) (hzhang fix:
+                    // the old rule derives trailing unpaired bases twice). Mirror
+                    // that rule here; previously the traceback used the old rule
+                    // with the new FMi values, so samples did not follow exp(s)/Z.
                     {
-                        roulette.add(EncodeTraceback(TB_FM_UNPAIRED,0),
-                                     FMi[offset[i]+j-1] + ScoreMultiUnpaired(j));
+                        RealT temp = RealT(0);
+                        for (int zh = j; zh > i+1; zh--)
+                        {
+                            if (!allow_unpaired_position[zh]) break;
+                            temp += ScoreMultiUnpaired(zh);
+                            roulette.add(EncodeTraceback(TB_FM_UNPAIRED, zh),
+                                         FM1i[offset[i]+zh-1] + temp);
+                        }
                     }
 
                     // compute FM1[i,j]
@@ -8848,7 +8857,9 @@ std::vector<int> InferenceEngine<RealT>::PredictPairingsStochasticTraceback() co
                         break;
                         case TB_FM_UNPAIRED:
                         {
-                            traceback_queue.push(make_triple(int(ST_FM), i, j-1));
+                            // positions zh..j unpaired; one branch in FM1[i,zh-1]
+                            const int zh = traceback.second;
+                            traceback_queue.push(make_triple(int(ST_FM1), i, zh-1));
                         }
                         break;
                         case TB_FM_FM1: 
